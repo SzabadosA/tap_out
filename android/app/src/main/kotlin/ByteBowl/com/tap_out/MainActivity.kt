@@ -1,4 +1,4 @@
-package ByteBowl.com.tap_out
+package com.bytebowl.tapout
 
 import io.flutter.embedding.android.FlutterActivity
 
