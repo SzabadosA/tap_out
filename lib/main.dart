@@ -1,10 +1,14 @@
 import 'package:avatar_glow/avatar_glow.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'settings_page.dart';
 import 'custom_button.dart';
+import 'package:flutter/services.dart';
 
-void main() => runApp(const MyApp());
+void main() {
+  runApp(const MyApp());
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -47,6 +51,12 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  @override
+  void initState() {
+    super.initState();
+    requestPermissions();
+  }
+
   bool isActivated = false;
 
   @override
@@ -88,7 +98,7 @@ class _MainPageState extends State<MainPage> {
                     ),
                   ],
                 )),
-            const SizedBox(height: 50),
+            const SizedBox(height: 35),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
@@ -125,5 +135,18 @@ class _MainPageState extends State<MainPage> {
         ),
       ),
     );
+  }
+
+  Future<void> requestPermissions() async {
+    LocationPermission permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.deniedForever) {
+      // Handle the permanent denial of permissions
+      return;
+    }
+
+    if (permission == LocationPermission.denied) {
+      // Handle the temporary denial of permissions
+      return;
+    }
   }
 }

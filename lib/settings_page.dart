@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:tap_out/custom_button.dart';
+import 'contacts.dart';
+import 'emergency_message.dart';
+import 'package:geolocator/geolocator.dart';
+import 'gps_service.dart';
 
 class SettingsPage extends StatelessWidget {
   final Function deactivateSessionCallback;
@@ -32,18 +37,30 @@ class SettingsPage extends StatelessWidget {
           ListTile(
             title: const Text('Edit Contacts'),
             onTap: () {
-              // Navigate to edit contacts page
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ContactsPage()),
+              );
             },
           ),
           ListTile(
             title: const Text('Edit Message'),
             onTap: () {
-              // Navigate to edit message page
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => EmergencyMessageWidget()),
+              );
             },
           ),
-          const SizedBox(height: 150),
-          ...List.generate(
-              5, (index) => ListTile(title: Text('Contact $index'))),
+          StyledElevatedButton(
+            text: 'Settings',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => LocationSession()),
+              );
+            },
+          ),
         ],
       ),
     );
