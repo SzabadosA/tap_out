@@ -54,15 +54,23 @@ class _MicPageState extends State<MicPage> {
   }
 
   void startTimer() {
-    timer ??= Timer.periodic(
-        const Duration(milliseconds: 50), (timer) => updateVolume());
+    timer = Timer.periodic(
+      const Duration(milliseconds: 50),
+      (timer) => updateVolume(),
+    );
   }
 
   void _vibrateForTwoSeconds() {
-    Vibration.vibrate(pattern: [500, 500, 500, 1000, 500, 2000]);
+    Vibration.vibrate(pattern: [0, 500, 500, 1000, 500, 2000]);
   }
 
   Future<void> updateVolume() async {
+    if (context.read<PeakDetectionNotifier>().isPatternDetected) {
+      timer?.cancel();
+      await micListener.stop();
+      return;
+    }
+
     Amplitude ampl = await micListener.getAmplitude();
     if (ampl.current > minVolume) {
       setState(() {
@@ -81,7 +89,6 @@ class _MicPageState extends State<MicPage> {
     if (volume > 0.8) {
       if (peakTimes.isEmpty || now - peakTimes.last > 300) {
         peakTimes.add(now);
-        print("Peak detected at $now");
         if (peakTimes.length > 3) {
           peakTimes.removeAt(0);
         }
@@ -93,12 +100,32 @@ class _MicPageState extends State<MicPage> {
         peakTimes.clear();
         context.read<PeakDetectionNotifier>().updatePatternDetection(true);
         _vibrateForTwoSeconds();
+        micListener.stop();
+        timer?.cancel();
       }
+    }
+  }
+
+  Future<void> restartMicrophone() async {
+    if (await micListener.hasPermission()) {
+      await micListener.start();
+      startTimer();
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isPatternDetected =
+        context.watch<PeakDetectionNotifier>().isPatternDetected;
+
+    if (!isPatternDetected) {
+      micListener.isRecording().then((isRecording) {
+        if (!isRecording) {
+          restartMicrophone();
+        }
+      });
+    }
+
     return Container(); // Return an empty container as this widget is not meant to display UI.
   }
 

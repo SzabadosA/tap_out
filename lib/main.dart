@@ -53,19 +53,16 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  bool isActivated = false;
-
   @override
   void initState() {
     super.initState();
     requestGeoPermissions();
-    print("Initializing MicPage");
     MicPage listener = MicPage();
   }
 
   @override
   Widget build(BuildContext context) {
-    final isPeakDetected =
+    final isPatternDetected =
         context.watch<PeakDetectionNotifier>().isPatternDetected;
 
     return Scaffold(
@@ -90,7 +87,7 @@ class _MainPageState extends State<MainPage> {
                 AvatarGlow(
                   duration: const Duration(milliseconds: 1500),
                   endRadius: 300,
-                  glowColor: isPeakDetected ? Colors.red : Colors.blue,
+                  glowColor: isPatternDetected ? Colors.red : Colors.blue,
                   curve: Curves.fastOutSlowIn,
                   child: Stack(
                     alignment: Alignment.center,
@@ -98,12 +95,12 @@ class _MainPageState extends State<MainPage> {
                       Icon(
                         Icons.circle,
                         size: 150,
-                        color: isPeakDetected ? Colors.red : Colors.blue,
+                        color: isPatternDetected ? Colors.red : Colors.blue,
                       ),
                       Icon(
                         Icons.circle_outlined,
                         size: 350,
-                        color: isPeakDetected ? Colors.red : Colors.blue,
+                        color: isPatternDetected ? Colors.red : Colors.blue,
                       ),
                     ],
                   ),
@@ -113,12 +110,12 @@ class _MainPageState extends State<MainPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     StyledElevatedButton(
-                      text: isActivated ? 'Active' : 'Activate',
-                      textColor: isActivated ? Colors.white : Colors.red,
+                      text: isPatternDetected ? 'Active' : 'Activate',
+                      textColor: isPatternDetected ? Colors.white : Colors.red,
                       onPressed: () {
-                        setState(() {
-                          isActivated = true;
-                        });
+                        context
+                            .read<PeakDetectionNotifier>()
+                            .updatePatternDetection(true);
                       },
                     ),
                     SizedBox(width: 20),
@@ -130,9 +127,9 @@ class _MainPageState extends State<MainPage> {
                           MaterialPageRoute(
                             builder: (context) => SettingsPage(
                               deactivateSessionCallback: () {
-                                setState(() {
-                                  isActivated = false; // Ensures deactivation
-                                });
+                                context
+                                    .read<PeakDetectionNotifier>()
+                                    .resetPatternDetection();
                               },
                             ),
                           ),
