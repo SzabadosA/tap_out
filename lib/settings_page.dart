@@ -4,6 +4,8 @@ import 'contacts.dart';
 import 'emergency_message.dart';
 import 'package:geolocator/geolocator.dart';
 import 'gps_service.dart';
+import 'package:provider/provider.dart';
+import 'pattern_recognition.dart';
 
 class SettingsPage extends StatelessWidget {
   final Function deactivateSessionCallback;
@@ -19,6 +21,13 @@ class SettingsPage extends StatelessWidget {
       ),
       body: ListView(
         children: <Widget>[
+          const SizedBox(height: 20),
+          ListTile(
+            title: const Text('Reset Peak Detection'),
+            onTap: () {
+              context.read<PeakDetectionNotifier>().resetPatternDetection();
+            },
+          ),
           ListTile(
             title: const Text('Deactivate Session'),
             onTap: () {
