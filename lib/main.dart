@@ -6,6 +6,9 @@ import 'package:provider/provider.dart';
 import 'settings_page.dart';
 import 'custom_button.dart';
 import 'pattern_recognition.dart';
+import 'gps_service.dart';
+import 'emergency_message.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(
@@ -53,11 +56,58 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  late LocationService locationService;
+  String geoLink = '';
+  String emergencyMessage = 'Your emergency message here'; // default message
+  bool isSessionActive = false;
+
   @override
   void initState() {
     super.initState();
     requestGeoPermissions();
-    MicPage listener = MicPage();
+    locationService = LocationService();
+    _loadEmergencyMessage();
+
+    // Add a listener to start/stop the geo session based on pattern detection
+    Provider.of<PeakDetectionNotifier>(context, listen: false)
+        .addListener(_handlePatternDetection);
+  }
+
+  @override
+  void dispose() {
+    locationService.endSession();
+    Provider.of<PeakDetectionNotifier>(context, listen: false)
+        .removeListener(_handlePatternDetection);
+    super.dispose();
+  }
+
+  Future<void> _loadEmergencyMessage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      emergencyMessage = prefs.getString('emergency_message') ??
+          "I am in danger. Please get help. I am at this location: ";
+    });
+  }
+
+  void _handlePatternDetection() async {
+    final isPatternDetected =
+        Provider.of<PeakDetectionNotifier>(context, listen: false)
+            .isPatternDetected;
+
+    if (isPatternDetected && !isSessionActive) {
+      await locationService.startSession();
+      setState(() {
+        geoLink = locationService.getGeoLink();
+        isSessionActive = true;
+      });
+      print('$emergencyMessage\n\nCurrent Location: $geoLink');
+    } else if (!isPatternDetected && isSessionActive) {
+      locationService.endSession();
+      setState(() {
+        isSessionActive = false;
+      });
+      print('Session ended');
+    }
   }
 
   @override
@@ -125,13 +175,7 @@ class _MainPageState extends State<MainPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => SettingsPage(
-                              deactivateSessionCallback: () {
-                                context
-                                    .read<PeakDetectionNotifier>()
-                                    .resetPatternDetection();
-                              },
-                            ),
+                            builder: (context) => SettingsPage(),
                           ),
                         );
                       },

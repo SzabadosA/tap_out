@@ -30,6 +30,7 @@ class MicPage extends StatefulWidget {
 class _MicPageState extends State<MicPage> {
   Record micListener = Record();
   Timer? timer;
+  bool isRecordingStopped = false;
 
   double volume = 0.0;
   double minVolume = -45.0;
@@ -65,11 +66,7 @@ class _MicPageState extends State<MicPage> {
   }
 
   Future<void> updateVolume() async {
-    if (context.read<PeakDetectionNotifier>().isPatternDetected) {
-      timer?.cancel();
-      await micListener.stop();
-      return;
-    }
+    if (isRecordingStopped) return;
 
     Amplitude ampl = await micListener.getAmplitude();
     if (ampl.current > minVolume) {
@@ -86,7 +83,7 @@ class _MicPageState extends State<MicPage> {
 
   void detectPeaks() {
     final now = DateTime.now().millisecondsSinceEpoch;
-    if (volume > 0.8) {
+    if (volume > 0.94) {
       if (peakTimes.isEmpty || now - peakTimes.last > 300) {
         peakTimes.add(now);
         if (peakTimes.length > 3) {
@@ -100,9 +97,17 @@ class _MicPageState extends State<MicPage> {
         peakTimes.clear();
         context.read<PeakDetectionNotifier>().updatePatternDetection(true);
         _vibrateForTwoSeconds();
-        micListener.stop();
-        timer?.cancel();
+        stopRecording();
       }
+    }
+  }
+
+  Future<void> stopRecording() async {
+    if (!isRecordingStopped) {
+      isRecordingStopped = true;
+      await micListener.stop();
+      timer?.cancel();
+      print('Stop recording');
     }
   }
 
