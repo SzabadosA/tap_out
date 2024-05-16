@@ -27,8 +27,8 @@ class LocationService {
         body: json.encode({'userId': userId}),
       );
       geoLink = '$serverUrl/track/$userId';
-      timer =
-          Timer.periodic(Duration(seconds: 15), (Timer t) => sendLocation());
+      print('Session start response: ${response.body}');
+      timer = Timer.periodic(Duration(seconds: 2), (Timer t) => sendLocation());
     } catch (e) {
       print('Failed to start session: $e');
     }
@@ -44,6 +44,7 @@ class LocationService {
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'userId': userId, 'location': location}),
       );
+      print('Location update response: ${response.body}');
     } catch (e) {
       print('Failed to send location: $e');
     }
@@ -57,6 +58,7 @@ class LocationService {
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'userId': userId}),
       );
+      print('Session end response: ${response.body}');
     } catch (e) {
       print('Failed to end session: $e');
     }

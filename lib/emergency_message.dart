@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class EmergencyMessageWidget extends StatefulWidget {
+  const EmergencyMessageWidget({super.key});
+
   @override
   _EmergencyMessageWidgetState createState() => _EmergencyMessageWidgetState();
 }
@@ -36,7 +38,7 @@ class _EmergencyMessageWidgetState extends State<EmergencyMessageWidget> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Emergency Message"),
+        title: const Text("Emergency Message"),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -44,21 +46,21 @@ class _EmergencyMessageWidgetState extends State<EmergencyMessageWidget> {
           children: <Widget>[
             TextField(
               controller: _controller,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Enter your emergency message',
                 border: OutlineInputBorder(),
               ),
               maxLines: 3,
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _saveMessage,
-              child: Text('Save Message'),
+              child: const Text('Save Message'),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Text(
               "Current Message: $_currentMessage",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ],
         ),

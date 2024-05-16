@@ -7,7 +7,7 @@ class StyledElevatedButton extends StatelessWidget {
   final Color textColor;
 
   // Constructor for your custom button
-  StyledElevatedButton({
+  const StyledElevatedButton({super.key, 
     required this.text,
     required this.onPressed,
     this.backgroundColor = Colors.blue,
@@ -20,9 +20,9 @@ class StyledElevatedButton extends StatelessWidget {
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        padding: EdgeInsets.symmetric(
+        padding: const EdgeInsets.symmetric(
             horizontal: 50, vertical: 20), // Adjust padding to change size
-        textStyle: TextStyle(fontSize: 20), // Optionally adjust font size
+        textStyle: const TextStyle(fontSize: 20), // Optionally adjust font size
       ),
       child: Text(text),
     );

@@ -7,7 +7,7 @@ class CustomScaffold extends StatelessWidget {
   final Widget? floatingActionButton;
   final List<Color> gradientColors;
 
-  CustomScaffold({
+  const CustomScaffold({super.key, 
     this.appBarTitle,
     this.actions,
     this.body,

@@ -9,6 +9,8 @@ import 'pattern_recognition.dart';
 import 'gps_service.dart';
 import 'emergency_message.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_sms/flutter_sms.dart';
 
 void main() {
   runApp(
@@ -45,12 +47,14 @@ class MyApp extends StatelessWidget {
           displaySmall: GoogleFonts.pacifico(),
         ),
       ),
-      home: MainPage(),
+      home: const MainPage(),
     );
   }
 }
 
 class MainPage extends StatefulWidget {
+  const MainPage({super.key});
+
   @override
   _MainPageState createState() => _MainPageState();
 }
@@ -60,25 +64,106 @@ class _MainPageState extends State<MainPage> {
   String geoLink = '';
   String emergencyMessage = 'Your emergency message here'; // default message
   bool isSessionActive = false;
+  bool permissionsGranted = false;
 
   @override
   void initState() {
     super.initState();
-    requestGeoPermissions();
+    _requestPermissions();
     locationService = LocationService();
     _loadEmergencyMessage();
+  }
 
+  Future<void> _requestPermissions() async {
+    bool micGranted = await _requestMicPermission();
+    if (micGranted) {
+      bool geoGranted = await _requestGeoPermission();
+      if (geoGranted) {
+        bool smsGranted = await _requestSmsPermission();
+        if (smsGranted) {
+          setState(() {
+            permissionsGranted = true;
+            _initializeListeners();
+          });
+        } else {
+          _showPermissionDeniedDialog('SMS');
+        }
+      } else {
+        _showPermissionDeniedDialog('Geolocation');
+      }
+    } else {
+      _showPermissionDeniedDialog('Microphone');
+    }
+  }
+
+  Future<bool> _requestMicPermission() async {
+    if (await Permission.microphone.request().isGranted) {
+      return true;
+    } else {
+      // Handle the denial of microphone permission
+      print("Microphone permission denied");
+      return false;
+    }
+  }
+
+  Future<bool> _requestGeoPermission() async {
+    LocationPermission permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.whileInUse ||
+        permission == LocationPermission.always) {
+      return true;
+    } else {
+      // Handle the denial of geolocation permissions
+      print("Geolocation permission denied");
+      return false;
+    }
+  }
+
+  Future<bool> _requestSmsPermission() async {
+    if (await Permission.sms.request().isGranted) {
+      print("SMS permission granted");
+      return true;
+    } else {
+      print("SMS permission denied");
+      return false;
+    }
+  }
+
+  void _showPermissionDeniedDialog(String permission) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("$permission Permission Denied"),
+          content: Text(
+              "This permission is required for the app to function properly. Please grant the $permission permission in your device settings."),
+          actions: <Widget>[
+            TextButton(
+              child: Text("OK"),
+              onPressed: () {
+                Navigator.of(context).pop();
+                // Optionally, navigate the user to app settings
+                openAppSettings();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _initializeListeners() {
+    _loadEmergencyMessage();
     // Add a listener to start/stop the geo session based on pattern detection
     Provider.of<PeakDetectionNotifier>(context, listen: false)
         .addListener(_handlePatternDetection);
   }
 
-  @override
-  void dispose() {
-    locationService.endSession();
-    Provider.of<PeakDetectionNotifier>(context, listen: false)
-        .removeListener(_handlePatternDetection);
-    super.dispose();
+  void _sendSMS(String message, List<String> recipients) async {
+    String _result = await sendSMS(message: message, recipients: recipients)
+        .catchError((onError) {
+      print(onError);
+    });
+    print(_result);
   }
 
   Future<void> _loadEmergencyMessage() async {
@@ -100,7 +185,16 @@ class _MainPageState extends State<MainPage> {
         geoLink = locationService.getGeoLink();
         isSessionActive = true;
       });
-      print('$emergencyMessage\n\nCurrent Location: $geoLink');
+      String message = "$emergencyMessage\n\nLocation: $geoLink";
+      List<String> recipients = "";
+
+      // TODO Enable for SMS service
+      //String _result = await sendSMS(
+      //        message: message, recipients: recipients, sendDirect: true)
+      //    .catchError((onError) {
+      //  print(onError);
+      //});
+      print(message);
     } else if (!isPatternDetected && isSessionActive) {
       locationService.endSession();
       setState(() {
@@ -111,10 +205,15 @@ class _MainPageState extends State<MainPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final isPatternDetected =
-        context.watch<PeakDetectionNotifier>().isPatternDetected;
+  void dispose() {
+    locationService.endSession();
+    Provider.of<PeakDetectionNotifier>(context, listen: false)
+        .removeListener(_handlePatternDetection);
+    super.dispose();
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         elevation: 8,
@@ -128,79 +227,98 @@ class _MainPageState extends State<MainPage> {
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                AvatarGlow(
-                  duration: const Duration(milliseconds: 1500),
-                  endRadius: 300,
-                  glowColor: isPatternDetected ? Colors.red : Colors.blue,
-                  curve: Curves.fastOutSlowIn,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Icon(
-                        Icons.circle,
-                        size: 150,
-                        color: isPatternDetected ? Colors.red : Colors.blue,
-                      ),
-                      Icon(
-                        Icons.circle_outlined,
-                        size: 350,
-                        color: isPatternDetected ? Colors.red : Colors.blue,
-                      ),
-                    ],
+      body: permissionsGranted
+          ? Stack(
+              children: [
+                Center(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        AvatarGlow(
+                          duration: const Duration(milliseconds: 1500),
+                          endRadius: 300,
+                          glowColor: context
+                                  .watch<PeakDetectionNotifier>()
+                                  .isPatternDetected
+                              ? Colors.red
+                              : Colors.blue,
+                          curve: Curves.fastOutSlowIn,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Icon(
+                                Icons.circle,
+                                size: 150,
+                                color: context
+                                        .watch<PeakDetectionNotifier>()
+                                        .isPatternDetected
+                                    ? Colors.red
+                                    : Colors.blue,
+                              ),
+                              Icon(
+                                Icons.circle_outlined,
+                                size: 350,
+                                color: context
+                                        .watch<PeakDetectionNotifier>()
+                                        .isPatternDetected
+                                    ? Colors.red
+                                    : Colors.blue,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 35),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Expanded(
+                              child: StyledElevatedButton(
+                                text: context
+                                        .watch<PeakDetectionNotifier>()
+                                        .isPatternDetected
+                                    ? 'Active'
+                                    : 'Activate',
+                                textColor: context
+                                        .watch<PeakDetectionNotifier>()
+                                        .isPatternDetected
+                                    ? Colors.red
+                                    : Colors.white,
+                                onPressed: () {
+                                  context
+                                      .read<PeakDetectionNotifier>()
+                                      .updatePatternDetection(true);
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 20),
+                            Expanded(
+                              child: StyledElevatedButton(
+                                text: 'Settings',
+                                textColor: Colors.white,
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const SettingsPage(),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(height: 35),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    StyledElevatedButton(
-                      text: isPatternDetected ? 'Active' : 'Activate',
-                      textColor: isPatternDetected ? Colors.white : Colors.red,
-                      onPressed: () {
-                        context
-                            .read<PeakDetectionNotifier>()
-                            .updatePatternDetection(true);
-                      },
-                    ),
-                    SizedBox(width: 20),
-                    StyledElevatedButton(
-                      text: 'Settings',
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => SettingsPage(),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
+                const MicPage(), // Adding MicPage to the widget tree to ensure it's properly initialized
               ],
-            ),
-          ),
-          MicPage(), // Adding MicPage to the widget tree to ensure it's properly initialized
-        ],
-      ),
+            )
+          : Center(
+              child:
+                  CircularProgressIndicator()), // Show loading indicator while requesting permissions
     );
-  }
-
-  Future<void> requestGeoPermissions() async {
-    LocationPermission permission = await Geolocator.requestPermission();
-    if (permission == LocationPermission.deniedForever) {
-      // Handle the permanent denial of permissions
-      return;
-    }
-
-    if (permission == LocationPermission.denied) {
-      // Handle the temporary denial of permissions
-      return;
-    }
   }
 }

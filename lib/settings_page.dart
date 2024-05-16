@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:tap_out/custom_button.dart';
 import 'contacts.dart';
 import 'emergency_message.dart';
-import 'package:geolocator/geolocator.dart';
-import 'gps_service.dart';
 import 'package:provider/provider.dart';
 import 'pattern_recognition.dart';
 
 class SettingsPage extends StatelessWidget {
+  const SettingsPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -46,7 +45,7 @@ class SettingsPage extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => EmergencyMessageWidget()),
+                    builder: (context) => const EmergencyMessageWidget()),
               );
             },
           ),

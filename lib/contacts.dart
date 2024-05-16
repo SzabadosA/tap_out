@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Contact {
   final String name;
@@ -14,6 +15,31 @@ class ContactsPage extends StatefulWidget {
 
 class _ContactsPageState extends State<ContactsPage> {
   List<Contact> contacts = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadContacts();
+  }
+
+  Future<void> _loadContacts() async {
+    final prefs = await SharedPreferences.getInstance();
+    final contactData = prefs.getStringList('contacts') ?? [];
+    setState(() {
+      contacts = contactData.map((contact) {
+        final parts = contact.split('|');
+        return Contact(name: parts[0], phoneNumber: parts[1]);
+      }).toList();
+    });
+  }
+
+  Future<void> _saveContacts() async {
+    final prefs = await SharedPreferences.getInstance();
+    final contactData = contacts
+        .map((contact) => '${contact.name}|${contact.phoneNumber}')
+        .toList();
+    await prefs.setStringList('contacts', contactData);
+  }
 
   void _showAddContactDialog() {
     // Controllers to capture text input
@@ -53,6 +79,7 @@ class _ContactsPageState extends State<ContactsPage> {
                     contacts.add(Contact(
                         name: nameController.text,
                         phoneNumber: phoneController.text));
+                    _saveContacts();
                     Navigator.of(context).pop(); // Close the dialog
                   });
                 }
@@ -83,6 +110,7 @@ class _ContactsPageState extends State<ContactsPage> {
               onPressed: () {
                 setState(() {
                   contacts.removeAt(index); // Remove contact from list
+                  _saveContacts();
                 });
               },
             ),
