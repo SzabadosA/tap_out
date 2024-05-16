@@ -84,7 +84,7 @@ class _MicPageState extends State<MicPage> {
   void detectPeaks() {
     final now = DateTime.now().millisecondsSinceEpoch;
     if (volume > 0.94) {
-      if (peakTimes.isEmpty || now - peakTimes.last > 300) {
+      if (peakTimes.isEmpty || now - peakTimes.last > 400) {
         peakTimes.add(now);
         if (peakTimes.length > 3) {
           peakTimes.removeAt(0);

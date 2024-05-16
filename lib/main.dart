@@ -8,6 +8,7 @@ import 'custom_button.dart';
 import 'pattern_recognition.dart';
 import 'gps_service.dart';
 import 'emergency_message.dart';
+import 'contacts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_sms/flutter_sms.dart';
@@ -65,6 +66,7 @@ class _MainPageState extends State<MainPage> {
   String emergencyMessage = 'Your emergency message here'; // default message
   bool isSessionActive = false;
   bool permissionsGranted = false;
+  List<Contact> contacts = [];
 
   @override
   void initState() {
@@ -72,6 +74,7 @@ class _MainPageState extends State<MainPage> {
     _requestPermissions();
     locationService = LocationService();
     _loadEmergencyMessage();
+    _loadContacts();
   }
 
   Future<void> _requestPermissions() async {
@@ -152,7 +155,6 @@ class _MainPageState extends State<MainPage> {
   }
 
   void _initializeListeners() {
-    _loadEmergencyMessage();
     // Add a listener to start/stop the geo session based on pattern detection
     Provider.of<PeakDetectionNotifier>(context, listen: false)
         .addListener(_handlePatternDetection);
@@ -174,6 +176,17 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
+  Future<void> _loadContacts() async {
+    final prefs = await SharedPreferences.getInstance();
+    final contactData = prefs.getStringList('contacts') ?? [];
+    setState(() {
+      contacts = contactData.map((contact) {
+        final parts = contact.split('|');
+        return Contact(name: parts[0], phoneNumber: parts[1]);
+      }).toList();
+    });
+  }
+
   void _handlePatternDetection() async {
     final isPatternDetected =
         Provider.of<PeakDetectionNotifier>(context, listen: false)
@@ -181,19 +194,23 @@ class _MainPageState extends State<MainPage> {
 
     if (isPatternDetected && !isSessionActive) {
       await locationService.startSession();
+      await _loadContacts(); // Load the contacts again to ensure they are up-to-date
+      await _loadEmergencyMessage(); // Reload emergency message to ensure it is up-to-date
       setState(() {
         geoLink = locationService.getGeoLink();
         isSessionActive = true;
       });
       String message = "$emergencyMessage\n\nLocation: $geoLink";
-      List<String> recipients = "";
+      List<String> recipients =
+          contacts.map((contact) => contact.phoneNumber).toList();
 
-      // TODO Enable for SMS service
       //String _result = await sendSMS(
       //        message: message, recipients: recipients, sendDirect: true)
       //    .catchError((onError) {
       //  print(onError);
       //});
+      // TODO Enable to test SMS service
+      print(recipients); // Print the recipients list to ensure it is updated
       print(message);
     } else if (!isPatternDetected && isSessionActive) {
       locationService.endSession();
@@ -303,7 +320,11 @@ class _MainPageState extends State<MainPage> {
                                       builder: (context) =>
                                           const SettingsPage(),
                                     ),
-                                  );
+                                  ).then((_) {
+                                    // Reload emergency message and contacts when returning from settings
+                                    _loadEmergencyMessage();
+                                    _loadContacts();
+                                  });
                                 },
                               ),
                             ),
@@ -316,7 +337,7 @@ class _MainPageState extends State<MainPage> {
                 const MicPage(), // Adding MicPage to the widget tree to ensure it's properly initialized
               ],
             )
-          : Center(
+          : const Center(
               child:
                   CircularProgressIndicator()), // Show loading indicator while requesting permissions
     );

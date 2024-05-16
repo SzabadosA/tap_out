@@ -23,6 +23,8 @@ class _EmergencyMessageWidgetState extends State<EmergencyMessageWidget> {
     setState(() {
       _currentMessage = prefs.getString('emergency_message') ??
           "I am in danger. Please get help. I am at this location: ";
+      _controller.text =
+          _currentMessage; // Ensure the controller text is updated
     });
   }
 
