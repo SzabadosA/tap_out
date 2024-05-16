@@ -7,7 +7,6 @@ import 'settings_page.dart';
 import 'custom_button.dart';
 import 'pattern_recognition.dart';
 import 'gps_service.dart';
-import 'emergency_message.dart';
 import 'contacts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -204,11 +203,9 @@ class _MainPageState extends State<MainPage> {
       List<String> recipients =
           contacts.map((contact) => contact.phoneNumber).toList();
 
-      //String _result = await sendSMS(
-      //        message: message, recipients: recipients, sendDirect: true)
-      //    .catchError((onError) {
-      //  print(onError);
-      //});
+      String _result = await sendSMS(
+          message: message, recipients: recipients, sendDirect: true);
+      print(_result);
       // TODO Enable to test SMS service
       print(recipients); // Print the recipients list to ensure it is updated
       print(message);

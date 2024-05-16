@@ -42,6 +42,17 @@ class _MicPageState extends State<MicPage> {
   void initState() {
     super.initState();
     _initializeMicrophone();
+    _startListeningForPatternReset();
+  }
+
+  void _startListeningForPatternReset() {
+    // Listen for pattern reset changes
+    context.read<PeakDetectionNotifier>().addListener(() {
+      if (!context.read<PeakDetectionNotifier>().isPatternDetected) {
+        // Restart microphone when pattern detection is reset
+        restartMicrophone();
+      }
+    });
   }
 
   Future<void> _initializeMicrophone() async {
@@ -113,6 +124,9 @@ class _MicPageState extends State<MicPage> {
 
   Future<void> restartMicrophone() async {
     if (await micListener.hasPermission()) {
+      setState(() {
+        isRecordingStopped = false;
+      });
       await micListener.start();
       startTimer();
     }
@@ -123,12 +137,8 @@ class _MicPageState extends State<MicPage> {
     final isPatternDetected =
         context.watch<PeakDetectionNotifier>().isPatternDetected;
 
-    if (!isPatternDetected) {
-      micListener.isRecording().then((isRecording) {
-        if (!isRecording) {
-          restartMicrophone();
-        }
-      });
+    if (!isPatternDetected && isRecordingStopped) {
+      restartMicrophone();
     }
 
     return Container(); // Return an empty container as this widget is not meant to display UI.
