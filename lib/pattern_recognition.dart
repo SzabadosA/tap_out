@@ -108,16 +108,20 @@ class _MicPageState extends State<MicPage> {
   // Method to detect peaks in the volume levels
   void detectPeaks() {
     final now = DateTime.now().millisecondsSinceEpoch;
-    if (volume > 0.94) {
+    final double averageVolume =
+        volumeBuffer.reduce((a, b) => a + b) / volumeBuffer.length;
+    final double threshold = averageVolume + 0.5; // Adaptive threshold
+
+    if (volume > threshold) {
       if (peakTimes.isEmpty || now - peakTimes.last > 400) {
         peakTimes.add(now);
-        if (peakTimes.length > 3) {
-          peakTimes.removeAt(0); // Keep the peak times list to a maximum of 3
+        if (peakTimes.length > 4) {
+          peakTimes.removeAt(0); // Keep the peak times list to a maximum of 4
         }
       }
     }
-    if (peakTimes.length == 3) {
-      if (peakTimes[2] - peakTimes[0] < 2000) {
+    if (peakTimes.length == 4) {
+      if (peakTimes[3] - peakTimes[0] < 3000) {
         print("Pattern detected!");
         peakTimes.clear();
         context
