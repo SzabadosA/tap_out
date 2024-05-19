@@ -21,8 +21,11 @@ in the foreground and background, ensuring continuous monitoring and quick respo
 ### Setup and Installation
 
 #### Mobile App
-Install the apk in
-build/app/outputs/apk/release/app-release.apk
+Install the apk from
+```
+release/
+├── TapOutSOS.*.apk
+```
 ### File Structure
 
 #### Flutter App
