@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+// Model class for Contact
 class Contact {
   final String name;
   final String phoneNumber;
 
+  // Constructor for Contact class
   Contact({required this.name, required this.phoneNumber});
 }
 
+// Widget for displaying the contacts page
 class ContactsPage extends StatefulWidget {
   const ContactsPage({super.key});
 
@@ -16,18 +19,21 @@ class ContactsPage extends StatefulWidget {
 }
 
 class _ContactsPageState extends State<ContactsPage> {
+  // List to store contacts
   List<Contact> contacts = [];
 
   @override
   void initState() {
     super.initState();
-    _loadContacts();
+    _loadContacts(); // Load contacts when the widget is initialized
   }
 
+  // Function to load contacts from shared preferences
   Future<void> _loadContacts() async {
     final prefs = await SharedPreferences.getInstance();
     final contactData = prefs.getStringList('contacts') ?? [];
     setState(() {
+      // Map the stored data to Contact objects and update the contacts list
       contacts = contactData.map((contact) {
         final parts = contact.split('|');
         return Contact(name: parts[0], phoneNumber: parts[1]);
@@ -35,6 +41,7 @@ class _ContactsPageState extends State<ContactsPage> {
     });
   }
 
+  // Function to save contacts to shared preferences
   Future<void> _saveContacts() async {
     final prefs = await SharedPreferences.getInstance();
     final contactData = contacts
@@ -43,11 +50,13 @@ class _ContactsPageState extends State<ContactsPage> {
     await prefs.setStringList('contacts', contactData);
   }
 
+  // Function to show a dialog for adding a new contact
   void _showAddContactDialog() {
     // Controllers to capture text input
     TextEditingController nameController = TextEditingController();
     TextEditingController phoneController = TextEditingController();
 
+    // Show the dialog
     showDialog(
       context: context,
       builder: (context) {
@@ -78,10 +87,11 @@ class _ContactsPageState extends State<ContactsPage> {
                 if (nameController.text.isNotEmpty &&
                     phoneController.text.isNotEmpty) {
                   setState(() {
+                    // Add new contact to the list
                     contacts.add(Contact(
                         name: nameController.text,
                         phoneNumber: phoneController.text));
-                    _saveContacts();
+                    _saveContacts(); // Save the updated contacts list
                     Navigator.of(context).pop(); // Close the dialog
                   });
                 }
@@ -111,8 +121,8 @@ class _ContactsPageState extends State<ContactsPage> {
               icon: const Icon(Icons.delete),
               onPressed: () {
                 setState(() {
-                  contacts.removeAt(index); // Remove contact from list
-                  _saveContacts();
+                  contacts.removeAt(index); // Remove contact from the list
+                  _saveContacts(); // Save the updated contacts list
                 });
               },
             ),

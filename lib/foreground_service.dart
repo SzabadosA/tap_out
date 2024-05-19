@@ -21,6 +21,36 @@ class ForegroundLocationService extends TaskHandler {
     return uuid.v4();
   }
 
+  Future<void> startSession() async {
+    try {
+      var response = await http.post(
+        Uri.parse('$serverUrl/start-session'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'userId': userId}),
+      );
+      geoLink = '$serverUrl/track/$userId';
+      print('Session start response: ${response.body}');
+      timer = Timer.periodic(
+          const Duration(seconds: 2), (Timer t) => sendLocation());
+    } catch (e) {
+      print('Failed to start session: $e');
+    }
+  }
+
+  Future<void> endSession() async {
+    try {
+      timer?.cancel();
+      var response = await http.post(
+        Uri.parse('$serverUrl/end-session'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'userId': userId}),
+      );
+      print('Session end response: ${response.body}');
+    } catch (e) {
+      print('Failed to end session: $e');
+    }
+  }
+
   Future<void> sendLocation() async {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -52,7 +82,8 @@ class ForegroundLocationService extends TaskHandler {
 
   @override
   void onStart(DateTime timestamp, SendPort? sendPort) {
-    timer = Timer.periodic(const Duration(seconds: 15), (Timer t) => sendLocation());
+    timer = Timer.periodic(
+        const Duration(seconds: 15), (Timer t) => sendLocation());
   }
 
   @override

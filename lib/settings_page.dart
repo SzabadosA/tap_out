@@ -12,14 +12,15 @@ class SettingsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         elevation: 1,
-        title: const Text('Settings'),
+        title: const Text('Settings'), // Title of the app bar
       ),
       body: ListView(
         children: <Widget>[
-          const SizedBox(height: 20),
+          const SizedBox(height: 20), // Add spacing at the top of the list
           ListTile(
             title: const Text('Deactivate Session'),
             onTap: () {
+              // Deactivate session by resetting the pattern detection state
               context.read<PeakDetectionNotifier>().resetPatternDetection();
             },
           ),
@@ -27,12 +28,13 @@ class SettingsPage extends StatelessWidget {
             title: const Text('Continuous Mode On'),
             value: false,
             onChanged: (bool value) {
-              // Handle change
+              // Handle switch change (functionality to be implemented)
             },
           ),
           ListTile(
             title: const Text('Edit Contacts'),
             onTap: () {
+              // Navigate to the ContactsPage
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const ContactsPage()),
@@ -42,6 +44,7 @@ class SettingsPage extends StatelessWidget {
           ListTile(
             title: const Text('Edit Message'),
             onTap: () {
+              // Navigate to the EmergencyMessageWidget
               Navigator.push(
                 context,
                 MaterialPageRoute(

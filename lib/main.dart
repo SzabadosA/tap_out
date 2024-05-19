@@ -1,28 +1,29 @@
-import 'package:avatar_glow/avatar_glow.dart';
-import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
-import 'settings_page.dart';
-import 'custom_button.dart';
-import 'pattern_recognition.dart';
-import 'gps_service.dart';
-import 'contacts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:flutter_sms/flutter_sms.dart';
-import 'package:flutter_foreground_task/flutter_foreground_task.dart';
-import 'foreground_service.dart';
+import 'package:avatar_glow/avatar_glow.dart'; // Import for glowing avatar effect.
+import 'package:flutter/material.dart'; // Import for Flutter UI components.
+import 'package:geolocator/geolocator.dart'; // Import for geolocation services.
+import 'package:google_fonts/google_fonts.dart'; // Import for custom Google fonts.
+import 'package:provider/provider.dart'; // Import for state management using Provider.
+import 'settings_page.dart'; // Import for settings page.
+import 'custom_button.dart'; // Import for custom styled button.
+import 'pattern_recognition.dart'; // Import for pattern recognition logic.
+import 'contacts.dart'; // Import for managing emergency contacts.
+import 'package:shared_preferences/shared_preferences.dart'; // Import for persistent storage.
+import 'package:permission_handler/permission_handler.dart'; // Import for handling permissions.
+import 'package:flutter_sms/flutter_sms.dart'; // Import for sending SMS.
+import 'package:flutter_foreground_task/flutter_foreground_task.dart'; // Import for foreground service.
+import 'foreground_service.dart'; // Import for foreground location service.
 
 void main() {
   runApp(
     ChangeNotifierProvider(
-      create: (context) => PeakDetectionNotifier(),
-      child: const MyApp(),
+      create: (context) =>
+          PeakDetectionNotifier(), // Initialize the state notifier for peak detection.
+      child: const MyApp(), // Wrap MyApp with the ChangeNotifierProvider.
     ),
   );
 }
 
+// Root widget of the application.
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -31,7 +32,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'TapOut SOS',
       theme: ThemeData(
-        useMaterial3: true,
+        useMaterial3: true, // Use Material 3 design.
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.purple,
           brightness: Brightness.dark,
@@ -49,11 +50,12 @@ class MyApp extends StatelessWidget {
           displaySmall: GoogleFonts.pacifico(),
         ),
       ),
-      home: const MainPage(),
+      home: const MainPage(), // Set MainPage as the home widget.
     );
   }
 }
 
+// Stateful widget for the main page of the app.
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
 
@@ -62,9 +64,9 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  late LocationService locationService;
+  late ForegroundLocationService locationService;
   String geoLink = '';
-  String emergencyMessage = 'Your emergency message here'; // default message
+  String emergencyMessage = 'Your emergency message here'; // Default message.
   bool isSessionActive = false;
   bool permissionsGranted = false;
   List<Contact> contacts = [];
@@ -72,18 +74,20 @@ class _MainPageState extends State<MainPage> {
   @override
   void initState() {
     super.initState();
-    _initForegroundTask();
-    _requestPermissions();
-    locationService = LocationService();
-    _loadEmergencyMessage();
-    _loadContacts();
+    _initForegroundTask(); // Initialize foreground task.
+    _requestPermissions(); // Request necessary permissions.
+    locationService =
+        ForegroundLocationService(); // Initialize the foreground location service.
+    _loadEmergencyMessage(); // Load saved emergency message.
+    _loadContacts(); // Load saved contacts.
   }
 
+  // Initialize foreground task with notification options and settings.
   void _initForegroundTask() {
     FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
-        foregroundServiceType:
-            AndroidForegroundServiceType.DATA_SYNC, // Updated to a valid type
+        foregroundServiceType: AndroidForegroundServiceType
+            .DATA_SYNC, // Set foreground service type.
         channelId: 'foreground_service',
         channelName: 'Foreground Service Notification',
         channelDescription:
@@ -114,6 +118,7 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
+  // Request necessary permissions from the user.
   Future<void> _requestPermissions() async {
     bool micGranted = await _requestMicPermission();
     if (micGranted) {
@@ -123,7 +128,7 @@ class _MainPageState extends State<MainPage> {
         if (smsGranted) {
           setState(() {
             permissionsGranted = true;
-            _initializeListeners();
+            _initializeListeners(); // Initialize listeners for pattern detection.
           });
         } else {
           _showPermissionDeniedDialog('SMS');
@@ -136,6 +141,7 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
+  // Request microphone permission.
   Future<bool> _requestMicPermission() async {
     if (await Permission.microphone.request().isGranted) {
       return true;
@@ -145,6 +151,7 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
+  // Request geolocation permission.
   Future<bool> _requestGeoPermission() async {
     LocationPermission permission = await Geolocator.requestPermission();
     if (permission == LocationPermission.whileInUse ||
@@ -156,6 +163,7 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
+  // Request SMS permission.
   Future<bool> _requestSmsPermission() async {
     if (await Permission.sms.request().isGranted) {
       print("SMS permission granted");
@@ -166,6 +174,7 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
+  // Show a dialog informing the user that a permission is denied.
   void _showPermissionDeniedDialog(String permission) {
     showDialog(
       context: context,
@@ -188,11 +197,13 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
+  // Initialize listeners for pattern detection.
   void _initializeListeners() {
     Provider.of<PeakDetectionNotifier>(context, listen: false)
         .addListener(_handlePatternDetection);
   }
 
+  // Send an SMS message to the list of recipients.
   void _sendSMS(String message, List<String> recipients) async {
     String result = await sendSMS(message: message, recipients: recipients)
         .catchError((onError) {
@@ -201,6 +212,7 @@ class _MainPageState extends State<MainPage> {
     print(result);
   }
 
+  // Load the emergency message from shared preferences.
   Future<void> _loadEmergencyMessage() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -209,6 +221,7 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
+  // Load the list of contacts from shared preferences.
   Future<void> _loadContacts() async {
     final prefs = await SharedPreferences.getInstance();
     final contactData = prefs.getStringList('contacts') ?? [];
@@ -220,13 +233,14 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
+  // Handle pattern detection events and start/stop sessions accordingly.
   void _handlePatternDetection() async {
     final isPatternDetected =
         Provider.of<PeakDetectionNotifier>(context, listen: false)
             .isPatternDetected;
 
     if (isPatternDetected && !isSessionActive) {
-      await locationService.startSession();
+      await locationService.startSession(); // Start the location session.
       await _loadContacts();
       await _loadEmergencyMessage();
       setState(() {
@@ -243,18 +257,19 @@ class _MainPageState extends State<MainPage> {
       print(recipients);
       print(message);
 
-      _startForegroundTask();
+      _startForegroundTask(); // Start the foreground task.
     } else if (!isPatternDetected && isSessionActive) {
-      locationService.endSession();
+      locationService.endSession(); // End the location session.
       setState(() {
         isSessionActive = false;
       });
       print('Session ended');
 
-      _stopForegroundTask();
+      _stopForegroundTask(); // Stop the foreground task.
     }
   }
 
+  // Start the foreground task with specified notification options.
   Future<void> _startForegroundTask() async {
     await FlutterForegroundTask.startService(
       notificationTitle: 'Foreground Service is running',
@@ -263,13 +278,15 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
+  // Stop the foreground task.
   Future<void> _stopForegroundTask() async {
     await FlutterForegroundTask.stopService();
   }
 
   @override
   void dispose() {
-    locationService.endSession();
+    locationService
+        .endSession(); // End the location session when disposing the widget.
     Provider.of<PeakDetectionNotifier>(context, listen: false)
         .removeListener(_handlePatternDetection);
     super.dispose();
@@ -380,15 +397,18 @@ class _MainPageState extends State<MainPage> {
                       ),
                     ),
                   ),
-                  const MicPage(),
+                  const MicPage(), // Ensure MicPage is included in the widget tree for microphone functionality.
                 ],
               )
-            : const Center(child: CircularProgressIndicator()),
+            : const Center(
+                child:
+                    CircularProgressIndicator()), // Show loading indicator while permissions are being requested.
       ),
     );
   }
 }
 
+// Callback function for starting the foreground task.
 @pragma('vm:entry-point')
 void startCallback() {
   FlutterForegroundTask.setTaskHandler(ForegroundLocationService());
