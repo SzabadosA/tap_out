@@ -7,11 +7,13 @@ import 'settings_page.dart'; // Import for settings page.
 import 'custom_button.dart'; // Import for custom styled button.
 import 'pattern_recognition.dart'; // Import for pattern recognition logic.
 import 'contacts.dart'; // Import for managing emergency contacts.
+import 'help_page.dart'; // Import help page
 import 'package:shared_preferences/shared_preferences.dart'; // Import for persistent storage.
 import 'package:permission_handler/permission_handler.dart'; // Import for handling permissions.
 import 'package:flutter_sms/flutter_sms.dart'; // Import for sending SMS.
 import 'package:flutter_foreground_task/flutter_foreground_task.dart'; // Import for foreground service.
 import 'foreground_service.dart'; // Import for foreground location service.
+import 'package:vibration/vibration.dart';
 
 void main() {
   runApp(
@@ -303,7 +305,12 @@ class _MainPageState extends State<MainPage> {
             IconButton(
               icon: const Icon(Icons.help_outline),
               onPressed: () {
-                // Help action
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const HelpPage(),
+                  ),
+                );
               },
             ),
           ],
@@ -369,6 +376,14 @@ class _MainPageState extends State<MainPage> {
                                     context
                                         .read<PeakDetectionNotifier>()
                                         .updatePatternDetection(true);
+                                    Vibration.vibrate(pattern: [
+                                      0,
+                                      500,
+                                      500,
+                                      1000,
+                                      500,
+                                      2000
+                                    ]);
                                   },
                                 ),
                               ),
