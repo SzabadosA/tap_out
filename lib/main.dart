@@ -11,6 +11,8 @@ import 'contacts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_sms/flutter_sms.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'foreground_service.dart';
 
 void main() {
   runApp(
@@ -70,10 +72,46 @@ class _MainPageState extends State<MainPage> {
   @override
   void initState() {
     super.initState();
+    _initForegroundTask();
     _requestPermissions();
     locationService = LocationService();
     _loadEmergencyMessage();
     _loadContacts();
+  }
+
+  void _initForegroundTask() {
+    FlutterForegroundTask.init(
+      androidNotificationOptions: AndroidNotificationOptions(
+        foregroundServiceType:
+            AndroidForegroundServiceType.DATA_SYNC, // Updated to a valid type
+        channelId: 'foreground_service',
+        channelName: 'Foreground Service Notification',
+        channelDescription:
+            'This notification appears when the foreground service is running.',
+        channelImportance: NotificationChannelImportance.LOW,
+        priority: NotificationPriority.LOW,
+        iconData: const NotificationIconData(
+          resType: ResourceType.mipmap,
+          resPrefix: ResourcePrefix.ic,
+          name: 'launcher',
+        ),
+        buttons: [
+          const NotificationButton(id: 'sendButton', text: 'Send'),
+          const NotificationButton(id: 'testButton', text: 'Test'),
+        ],
+      ),
+      iosNotificationOptions: const IOSNotificationOptions(
+        showNotification: true,
+        playSound: false,
+      ),
+      foregroundTaskOptions: const ForegroundTaskOptions(
+        interval: 5000,
+        isOnceEvent: false,
+        autoRunOnBoot: true,
+        allowWakeLock: true,
+        allowWifiLock: true,
+      ),
+    );
   }
 
   Future<void> _requestPermissions() async {
@@ -102,7 +140,6 @@ class _MainPageState extends State<MainPage> {
     if (await Permission.microphone.request().isGranted) {
       return true;
     } else {
-      // Handle the denial of microphone permission
       print("Microphone permission denied");
       return false;
     }
@@ -114,7 +151,6 @@ class _MainPageState extends State<MainPage> {
         permission == LocationPermission.always) {
       return true;
     } else {
-      // Handle the denial of geolocation permissions
       print("Geolocation permission denied");
       return false;
     }
@@ -140,10 +176,9 @@ class _MainPageState extends State<MainPage> {
               "This permission is required for the app to function properly. Please grant the $permission permission in your device settings."),
           actions: <Widget>[
             TextButton(
-              child: Text("OK"),
+              child: const Text("OK"),
               onPressed: () {
                 Navigator.of(context).pop();
-                // Optionally, navigate the user to app settings
                 openAppSettings();
               },
             ),
@@ -154,17 +189,16 @@ class _MainPageState extends State<MainPage> {
   }
 
   void _initializeListeners() {
-    // Add a listener to start/stop the geo session based on pattern detection
     Provider.of<PeakDetectionNotifier>(context, listen: false)
         .addListener(_handlePatternDetection);
   }
 
   void _sendSMS(String message, List<String> recipients) async {
-    String _result = await sendSMS(message: message, recipients: recipients)
+    String result = await sendSMS(message: message, recipients: recipients)
         .catchError((onError) {
       print(onError);
     });
-    print(_result);
+    print(result);
   }
 
   Future<void> _loadEmergencyMessage() async {
@@ -193,29 +227,44 @@ class _MainPageState extends State<MainPage> {
 
     if (isPatternDetected && !isSessionActive) {
       await locationService.startSession();
-      await _loadContacts(); // Load the contacts again to ensure they are up-to-date
-      await _loadEmergencyMessage(); // Reload emergency message to ensure it is up-to-date
+      await _loadContacts();
+      await _loadEmergencyMessage();
       setState(() {
-        geoLink = locationService.getGeoLink();
+        geoLink = locationService.geoLink;
         isSessionActive = true;
       });
       String message = "$emergencyMessage\n\nLocation: $geoLink";
       List<String> recipients =
           contacts.map((contact) => contact.phoneNumber).toList();
 
-      String _result = await sendSMS(
+      String result = await sendSMS(
           message: message, recipients: recipients, sendDirect: true);
-      print(_result);
-      // TODO Enable to test SMS service
-      print(recipients); // Print the recipients list to ensure it is updated
+      print(result);
+      print(recipients);
       print(message);
+
+      _startForegroundTask();
     } else if (!isPatternDetected && isSessionActive) {
       locationService.endSession();
       setState(() {
         isSessionActive = false;
       });
       print('Session ended');
+
+      _stopForegroundTask();
     }
+  }
+
+  Future<void> _startForegroundTask() async {
+    await FlutterForegroundTask.startService(
+      notificationTitle: 'Foreground Service is running',
+      notificationText: 'Tap to return to the app',
+      callback: startCallback,
+    );
+  }
+
+  Future<void> _stopForegroundTask() async {
+    await FlutterForegroundTask.stopService();
   }
 
   @override
@@ -228,115 +277,119 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        elevation: 8,
-        title: const Text('Tap Out SOS'),
-        actions: <Widget>[
-          IconButton(
-            icon: const Icon(Icons.help_outline),
-            onPressed: () {
-              // Help action
-            },
-          ),
-        ],
-      ),
-      body: permissionsGranted
-          ? Stack(
-              children: [
-                Center(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        AvatarGlow(
-                          duration: const Duration(milliseconds: 1500),
-                          endRadius: 300,
-                          glowColor: context
-                                  .watch<PeakDetectionNotifier>()
-                                  .isPatternDetected
-                              ? Colors.red
-                              : Colors.blue,
-                          curve: Curves.fastOutSlowIn,
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              Icon(
-                                Icons.circle,
-                                size: 150,
-                                color: context
-                                        .watch<PeakDetectionNotifier>()
-                                        .isPatternDetected
-                                    ? Colors.red
-                                    : Colors.blue,
+    return WithForegroundTask(
+      child: Scaffold(
+        appBar: AppBar(
+          elevation: 8,
+          title: const Text('Tap Out SOS'),
+          actions: <Widget>[
+            IconButton(
+              icon: const Icon(Icons.help_outline),
+              onPressed: () {
+                // Help action
+              },
+            ),
+          ],
+        ),
+        body: permissionsGranted
+            ? Stack(
+                children: [
+                  Center(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          AvatarGlow(
+                            duration: const Duration(milliseconds: 1500),
+                            endRadius: 300,
+                            glowColor: context
+                                    .watch<PeakDetectionNotifier>()
+                                    .isPatternDetected
+                                ? Colors.red
+                                : Colors.blue,
+                            curve: Curves.fastOutSlowIn,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Icon(
+                                  Icons.circle,
+                                  size: 150,
+                                  color: context
+                                          .watch<PeakDetectionNotifier>()
+                                          .isPatternDetected
+                                      ? Colors.red
+                                      : Colors.blue,
+                                ),
+                                Icon(
+                                  Icons.circle_outlined,
+                                  size: 350,
+                                  color: context
+                                          .watch<PeakDetectionNotifier>()
+                                          .isPatternDetected
+                                      ? Colors.red
+                                      : Colors.blue,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 35),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              Expanded(
+                                child: StyledElevatedButton(
+                                  text: context
+                                          .watch<PeakDetectionNotifier>()
+                                          .isPatternDetected
+                                      ? 'Active'
+                                      : 'Activate',
+                                  textColor: context
+                                          .watch<PeakDetectionNotifier>()
+                                          .isPatternDetected
+                                      ? Colors.red
+                                      : Colors.white,
+                                  onPressed: () {
+                                    context
+                                        .read<PeakDetectionNotifier>()
+                                        .updatePatternDetection(true);
+                                  },
+                                ),
                               ),
-                              Icon(
-                                Icons.circle_outlined,
-                                size: 350,
-                                color: context
-                                        .watch<PeakDetectionNotifier>()
-                                        .isPatternDetected
-                                    ? Colors.red
-                                    : Colors.blue,
+                              const SizedBox(width: 20),
+                              Expanded(
+                                child: StyledElevatedButton(
+                                  text: 'Settings',
+                                  textColor: Colors.white,
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const SettingsPage(),
+                                      ),
+                                    ).then((_) {
+                                      _loadEmergencyMessage();
+                                      _loadContacts();
+                                    });
+                                  },
+                                ),
                               ),
                             ],
                           ),
-                        ),
-                        const SizedBox(height: 35),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            Expanded(
-                              child: StyledElevatedButton(
-                                text: context
-                                        .watch<PeakDetectionNotifier>()
-                                        .isPatternDetected
-                                    ? 'Active'
-                                    : 'Activate',
-                                textColor: context
-                                        .watch<PeakDetectionNotifier>()
-                                        .isPatternDetected
-                                    ? Colors.red
-                                    : Colors.white,
-                                onPressed: () {
-                                  context
-                                      .read<PeakDetectionNotifier>()
-                                      .updatePatternDetection(true);
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 20),
-                            Expanded(
-                              child: StyledElevatedButton(
-                                text: 'Settings',
-                                textColor: Colors.white,
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const SettingsPage(),
-                                    ),
-                                  ).then((_) {
-                                    // Reload emergency message and contacts when returning from settings
-                                    _loadEmergencyMessage();
-                                    _loadContacts();
-                                  });
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                const MicPage(), // Adding MicPage to the widget tree to ensure it's properly initialized
-              ],
-            )
-          : const Center(
-              child:
-                  CircularProgressIndicator()), // Show loading indicator while requesting permissions
+                  const MicPage(),
+                ],
+              )
+            : const Center(child: CircularProgressIndicator()),
+      ),
     );
   }
+}
+
+@pragma('vm:entry-point')
+void startCallback() {
+  FlutterForegroundTask.setTaskHandler(ForegroundLocationService());
 }

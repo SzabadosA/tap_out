@@ -21,7 +21,7 @@ class PeakDetectionNotifier extends ChangeNotifier {
 }
 
 class MicPage extends StatefulWidget {
-  const MicPage({Key? key}) : super(key: key);
+  const MicPage({super.key});
 
   @override
   State<MicPage> createState() => _MicPageState();

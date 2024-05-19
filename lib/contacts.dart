@@ -9,6 +9,8 @@ class Contact {
 }
 
 class ContactsPage extends StatefulWidget {
+  const ContactsPage({super.key});
+
   @override
   _ContactsPageState createState() => _ContactsPageState();
 }
@@ -50,17 +52,17 @@ class _ContactsPageState extends State<ContactsPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Add New Contact'),
+          title: const Text('Add New Contact'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: nameController,
-                decoration: InputDecoration(labelText: 'Name'),
+                decoration: const InputDecoration(labelText: 'Name'),
               ),
               TextField(
                 controller: phoneController,
-                decoration: InputDecoration(labelText: 'Phone Number'),
+                decoration: const InputDecoration(labelText: 'Phone Number'),
               ),
             ],
           ),
@@ -69,7 +71,7 @@ class _ContactsPageState extends State<ContactsPage> {
               onPressed: () {
                 Navigator.of(context).pop(); // Close the dialog
               },
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () {
@@ -84,7 +86,7 @@ class _ContactsPageState extends State<ContactsPage> {
                   });
                 }
               },
-              child: Text('Add'),
+              child: const Text('Add'),
             ),
           ],
         );
@@ -96,7 +98,7 @@ class _ContactsPageState extends State<ContactsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Emergency Contacts'),
+        title: const Text('Emergency Contacts'),
       ),
       body: ListView.builder(
         itemCount: contacts.length,
@@ -106,7 +108,7 @@ class _ContactsPageState extends State<ContactsPage> {
             title: Text(contact.name),
             subtitle: Text(contact.phoneNumber),
             trailing: IconButton(
-              icon: Icon(Icons.delete),
+              icon: const Icon(Icons.delete),
               onPressed: () {
                 setState(() {
                   contacts.removeAt(index); // Remove contact from list
