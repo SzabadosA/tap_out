@@ -24,13 +24,6 @@ class SettingsPage extends StatelessWidget {
               context.read<PeakDetectionNotifier>().resetPatternDetection();
             },
           ),
-          SwitchListTile(
-            title: const Text('Continuous Mode On'),
-            value: false,
-            onChanged: (bool value) {
-              // Handle switch change (functionality to be implemented)
-            },
-          ),
           ListTile(
             title: const Text('Edit Contacts'),
             onTap: () {
