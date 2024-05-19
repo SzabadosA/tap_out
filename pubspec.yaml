@@ -42,7 +42,6 @@ dependencies:
     git:
       url: https://github.com/fluttercommunity/flutter_sms.git
       ref: master
-  telephony: ^0.2.0
   flutter_foreground_task: ^6.2.0
 
   # The following adds the Cupertino Icons font to your application.
