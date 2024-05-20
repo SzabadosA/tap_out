@@ -19,13 +19,13 @@ void main() {
   runApp(
     ChangeNotifierProvider(
       create: (context) => PeakDetectionNotifier(),
-      child: const MyApp(),
+      child: const TapOutApp(),
     ),
   );
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class TapOutApp extends StatelessWidget {
+  const TapOutApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -307,7 +307,7 @@ class _MainPageState extends State<MainPage> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Color(0x56008E), // Dark purple color at the top
+                      const Color(0x0056008e), // Dark purple color at the top
                       Theme.of(context)
                           .scaffoldBackgroundColor, // Current color at the bottom
                     ],
@@ -317,7 +317,7 @@ class _MainPageState extends State<MainPage> {
                 ),
                 child: Stack(
                   children: [
-                    Center(
+                    const Center(
                       child: SingleChildScrollView(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,

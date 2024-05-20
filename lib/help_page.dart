@@ -12,13 +12,13 @@ class HelpPage extends StatelessWidget {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListView(
-          children: <Widget>[
-            const Text(
+          children: const <Widget>[
+            Text(
               'Welcome to TapOut SOS',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 20),
-            const Text(
+            SizedBox(height: 20),
+            Text(
               'TapOut SOS is a safety application designed to help you in '
               'emergency situations by sending your real-time location to '
               'your emergency contacts by tapping your phone 4 times. Here, we will '
@@ -27,13 +27,13 @@ class HelpPage extends StatelessWidget {
               'the app\'s service and warranty.',
               style: TextStyle(fontSize: 16),
             ),
-            const SizedBox(height: 20),
-            const Text(
+            SizedBox(height: 20),
+            Text(
               'How to Use the App',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 10),
-            const Text(
+            SizedBox(height: 10),
+            Text(
               '\nGrant Permissions:\nWhen '
               'you first open the app, you will be prompted to grant '
               'various permissions. These include access to your microphone, '
@@ -42,13 +42,13 @@ class HelpPage extends StatelessWidget {
               'permissions are granted.',
               style: TextStyle(fontSize: 16),
             ),
-            const SizedBox(height: 20),
-            const Text(
+            SizedBox(height: 20),
+            Text(
               'Main Features',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 20),
-            const Text(
+            SizedBox(height: 20),
+            Text(
               'Sending Emergency Alerts\n\nAutomatic Detection:\nWhen the app '
               'detects a pattern of 4 taps, '
               'it will automatically send an SMS with your current location '
@@ -61,24 +61,24 @@ class HelpPage extends StatelessWidget {
               '"Deactivate" button in the settings page to turn off the SOS mode.',
               style: TextStyle(fontSize: 16),
             ),
-            const SizedBox(height: 20),
-            const Text(
+            SizedBox(height: 20),
+            Text(
               'Managing Emergency Contacts\n\nAdd/Edit Contacts:\nGo to the '
               'settings page and select "Edit Contacts". Here, you can add, '
               'edit, or remove emergency contacts. Ensure that your contacts '
               'are correctly saved as they will be notified during an emergency.',
               style: TextStyle(fontSize: 16),
             ),
-            const SizedBox(height: 20),
-            const Text(
+            SizedBox(height: 20),
+            Text(
               'Customizing Emergency Message\n\nSet Emergency Message:\nIn the '
               'settings page, tap on "Edit Message". Enter your personalized '
               'emergency message. This message will be sent along with your '
               'location to your emergency contacts during an alert.',
               style: TextStyle(fontSize: 16),
             ),
-            const SizedBox(height: 20),
-            const Text(
+            SizedBox(height: 20),
+            Text(
               'Important Information\n\nPermissions Required\n\nMicrophone:\n'
               'Needed to detect specific voice patterns that trigger the '
               'emergency alert.\n\nLocation:\nRequired to send your real-time '
@@ -90,8 +90,8 @@ class HelpPage extends StatelessWidget {
               'indicating that the app is running in the background.',
               style: TextStyle(fontSize: 16),
             ),
-            const SizedBox(height: 20),
-            const Text(
+            SizedBox(height: 20),
+            Text(
               'Exclusion of Guarantee and Warranty\n\nNo Guarantee of Service:\n'
               'TapOut SOS is provided as-is, without any guarantees of '
               'performance. While we strive to provide accurate and reliable '
@@ -109,8 +109,8 @@ class HelpPage extends StatelessWidget {
               'after installation to ensure it is working as expected.',
               style: TextStyle(fontSize: 16),
             ),
-            const SizedBox(height: 20),
-            const Text(
+            SizedBox(height: 20),
+            Text(
               '\n\nThank you for using TapOut SOS and stay safe!',
               style: TextStyle(fontSize: 16),
             ),
