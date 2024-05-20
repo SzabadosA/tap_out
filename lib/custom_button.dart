@@ -13,27 +13,60 @@ class StyledElevatedButton extends StatelessWidget {
     super.key,
     required this.text, // Text to be displayed on the button
     required this.onPressed, // Callback function when the button is pressed
-    this.backgroundColor = Colors.blue, // Default background color
+    this.backgroundColor = const Color(0x390C64), // Default background color
     this.textColor = Colors.white, // Default text color
   });
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed:
-          onPressed, // Assign the callback function to the button's onPressed property
-      style: ElevatedButton.styleFrom(
-        shape: RoundedRectangleBorder(
-          borderRadius:
-              BorderRadius.circular(15), // Rounded corners for the button
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          colors: [backgroundColor, backgroundColor.withOpacity(0.9)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        padding: const EdgeInsets.symmetric(
-            horizontal: 50, vertical: 20), // Adjust padding to change size
-        textStyle: const TextStyle(fontSize: 20), // Optionally adjust font size
+        //boxShadow: [
+        //  BoxShadow(
+        //    //color: const Color(0x6D3EAF),
+        //    color: const Color(0x1D093A).withOpacity(0.5),
+        //    offset: const Offset(2, 2),
+        //    blurRadius: 8,
+        //    spreadRadius: 1,
+        //  ),
+        //  BoxShadow(
+        //    color: const Color(0x1D093A).withOpacity(0.5),
+        //    offset: const Offset(0, 0),
+        //    blurRadius: 20,
+        //    spreadRadius: 5,
+        //  ),
+        //],
       ),
-      child: Text(
-        text, // Text to display on the button
-        style: TextStyle(color: textColor), // Text color
+      child: ElevatedButton(
+        onPressed:
+            onPressed, // Assign the callback function to the button's onPressed property
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors
+              .transparent, // Set background to transparent to show gradient
+          shape: RoundedRectangleBorder(
+            borderRadius:
+                BorderRadius.circular(16), // Rounded corners for the button
+          ),
+          padding: const EdgeInsets.symmetric(
+              horizontal: 15, vertical: 15), // Adjust padding to change size
+          elevation: 0, // Remove default elevation
+        ),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            text, // Text to display on the button
+            style: TextStyle(
+              color: textColor, // Text color
+              fontSize: 20, // Initial font size
+            ),
+          ),
+        ),
       ),
     );
   }
