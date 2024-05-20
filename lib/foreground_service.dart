@@ -92,6 +92,7 @@ class ForegroundLocationService extends TaskHandler {
   @override
   void onDestroy(DateTime timestamp, SendPort? sendPort) {
     timer?.cancel();
+    timer = null; // Explicitly set timer to null
   }
 
   @override

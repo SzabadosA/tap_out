@@ -32,17 +32,18 @@ dependencies:
     sdk: flutter
   google_fonts: 6.2.1
   permission_handler: ^11.3.1
-  geolocator: ^9.0.1
+  geolocator: ^12.0.0
   http: ^1.2.1
   uuid: ^4.4.0
   url_launcher: ^6.0.12
   record: 4.4.4
-  provider: 6.0.3
+  provider: ^6.1.2
   flutter_sms:
     git:
       url: https://github.com/fluttercommunity/flutter_sms.git
       ref: master
   flutter_foreground_task: ^6.2.0
+
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -54,13 +55,15 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  mockito: ^5.4.4
+  build_runner: ^2.4.10
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^3.0.0
+  flutter_lints: ^4.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

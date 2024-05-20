@@ -13,7 +13,7 @@ class StyledElevatedButton extends StatelessWidget {
     super.key,
     required this.text, // Text to be displayed on the button
     required this.onPressed, // Callback function when the button is pressed
-    this.backgroundColor = const Color(0x390C64), // Default background color
+    this.backgroundColor = const Color(0x00390c64), // Default background color
     this.textColor = Colors.white, // Default text color
   });
 
