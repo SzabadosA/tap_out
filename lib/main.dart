@@ -42,12 +42,12 @@ class TapOutApp extends StatelessWidget {
             fontSize: 72,
             fontWeight: FontWeight.bold,
           ),
-          titleLarge: GoogleFonts.oswald(
+          titleLarge: GoogleFonts.nunitoSans(
             fontSize: 30,
             fontStyle: FontStyle.italic,
           ),
-          bodyMedium: GoogleFonts.merriweather(),
-          displaySmall: GoogleFonts.pacifico(),
+          bodyMedium: GoogleFonts.lato(),
+          displaySmall: GoogleFonts.lato(),
         ),
       ),
       home: const MainPage(),
