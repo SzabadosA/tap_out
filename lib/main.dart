@@ -78,39 +78,45 @@ class _MainPageState extends State<MainPage> {
     locationService = ForegroundLocationService();
     _loadEmergencyMessage();
     _loadContacts();
+    _startForegroundTask();
   }
 
   void _initForegroundTask() {
     FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
-        foregroundServiceType: AndroidForegroundServiceType.DATA_SYNC,
-        channelId: 'foreground_service',
-        channelName: 'Foreground Service Notification',
-        channelDescription:
-            'This notification appears when the foreground service is running.',
+        channelId: 'foreground_service_channel',
+        channelName: 'Foreground Service',
+        channelDescription: 'This channel is used for important notifications.',
         channelImportance: NotificationChannelImportance.LOW,
         priority: NotificationPriority.LOW,
-        iconData: const NotificationIconData(
+        iconData: NotificationIconData(
           resType: ResourceType.mipmap,
           resPrefix: ResourcePrefix.ic,
           name: 'launcher',
         ),
         buttons: [
-          const NotificationButton(id: 'sendButton', text: 'Send'),
-          const NotificationButton(id: 'testButton', text: 'Test'),
+          NotificationButton(id: 'pause', text: 'Pause'),
+          NotificationButton(id: 'stop', text: 'Stop'),
         ],
       ),
-      iosNotificationOptions: const IOSNotificationOptions(
+      iosNotificationOptions: IOSNotificationOptions(
         showNotification: true,
         playSound: false,
       ),
-      foregroundTaskOptions: const ForegroundTaskOptions(
-        interval: 5000,
-        isOnceEvent: false,
+      foregroundTaskOptions: ForegroundTaskOptions(
+        interval: 10000,
         autoRunOnBoot: true,
         allowWakeLock: true,
         allowWifiLock: true,
       ),
+    );
+  }
+
+  Future<void> _startForegroundTask() async {
+    await FlutterForegroundTask.startService(
+      notificationTitle: 'Service is Running',
+      notificationText: 'Tap to return to the app',
+      callback: startCallback,
     );
   }
 
@@ -227,6 +233,7 @@ class _MainPageState extends State<MainPage> {
 
     if (isPatternDetected && !isSessionActive) {
       await locationService.startSession();
+      locationService.startLocationUpdates();
       await _loadContacts();
       await _loadEmergencyMessage();
       setState(() {
@@ -237,34 +244,19 @@ class _MainPageState extends State<MainPage> {
       List<String> recipients =
           contacts.map((contact) => contact.phoneNumber).toList();
 
-      String result = await sendSMS(
-          message: message, recipients: recipients, sendDirect: true);
-      print(result);
-      print(recipients);
+      //String result = await sendSMS(
+      //    message: message, recipients: recipients, sendDirect: true);
+      //print(result);
+      //print(recipients);
       print(message);
-
-      _startForegroundTask();
     } else if (!isPatternDetected && isSessionActive) {
       locationService.endSession();
+      locationService.stopLocationUpdates();
       setState(() {
         isSessionActive = false;
       });
       print('Session ended');
-
-      _stopForegroundTask();
     }
-  }
-
-  Future<void> _startForegroundTask() async {
-    await FlutterForegroundTask.startService(
-      notificationTitle: 'Foreground Service is running',
-      notificationText: 'Tap to return to the app',
-      callback: startCallback,
-    );
-  }
-
-  Future<void> _stopForegroundTask() async {
-    await FlutterForegroundTask.stopService();
   }
 
   @override

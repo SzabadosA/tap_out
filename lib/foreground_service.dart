@@ -5,12 +5,16 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:uuid/uuid.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:flutter/services.dart';
 
 class ForegroundLocationService extends TaskHandler {
   final String serverUrl = 'https://tapout.bit-bowl.com:3040';
   late String userId;
   Timer? timer;
+  Timer? locationUpdateTimer;
   String geoLink = '';
+  final MethodChannel _methodChannel =
+      const MethodChannel('com.example.app/wakelock');
 
   ForegroundLocationService() {
     userId = generateUUID();
@@ -23,6 +27,8 @@ class ForegroundLocationService extends TaskHandler {
 
   Future<void> startSession() async {
     try {
+      await _methodChannel.invokeMethod('acquireWakeLock');
+      print('Wake lock acquired in startSession');
       var response = await http.post(
         Uri.parse('$serverUrl/start-session'),
         headers: {'Content-Type': 'application/json'},
@@ -30,16 +36,22 @@ class ForegroundLocationService extends TaskHandler {
       );
       geoLink = '$serverUrl/track/$userId';
       print('Session start response: ${response.body}');
-      timer = Timer.periodic(
-          const Duration(seconds: 2), (Timer t) => sendLocation());
+      startLocationUpdates();
     } catch (e) {
       print('Failed to start session: $e');
     }
   }
 
+  void startLocationUpdates() {
+    locationUpdateTimer =
+        Timer.periodic(const Duration(seconds: 2), (Timer t) => sendLocation());
+  }
+
   Future<void> endSession() async {
     try {
-      timer?.cancel();
+      await _methodChannel.invokeMethod('releaseWakeLock');
+      print('Wake lock released in endSession');
+      locationUpdateTimer?.cancel();
       var response = await http.post(
         Uri.parse('$serverUrl/end-session'),
         headers: {'Content-Type': 'application/json'},
@@ -49,6 +61,10 @@ class ForegroundLocationService extends TaskHandler {
     } catch (e) {
       print('Failed to end session: $e');
     }
+  }
+
+  void stopLocationUpdates() {
+    locationUpdateTimer?.cancel();
   }
 
   Future<void> sendLocation() async {
@@ -82,26 +98,38 @@ class ForegroundLocationService extends TaskHandler {
 
   @override
   void onStart(DateTime timestamp, SendPort? sendPort) {
+    print('Foreground task started at $timestamp');
     timer = Timer.periodic(
-        const Duration(seconds: 15), (Timer t) => sendLocation());
+        const Duration(seconds: 10), (Timer t) => _logTime(sendPort));
+  }
+
+  void _logTime(SendPort? sendPort) {
+    final currentTime = DateTime.now();
+    print('Current time: $currentTime');
+    sendPort?.send('Current time: $currentTime');
   }
 
   @override
-  void onRepeatEvent(DateTime timestamp, SendPort? sendPort) {}
+  void onRepeatEvent(DateTime timestamp, SendPort? sendPort) {
+    print('onRepeatEvent called at $timestamp');
+    sendPort?.send('onRepeatEvent called at $timestamp');
+  }
 
   @override
   void onDestroy(DateTime timestamp, SendPort? sendPort) {
+    print('Foreground task destroyed at $timestamp');
     timer?.cancel();
+    locationUpdateTimer?.cancel();
     timer = null; // Explicitly set timer to null
   }
 
   @override
   void onNotificationButtonPressed(String id) {
-    // Handle notification button pressed event
+    print('Notification button pressed: $id');
   }
 
   @override
   void onNotificationPressed() {
-    // Handle notification pressed event
+    print('Notification pressed');
   }
 }
