@@ -100,13 +100,13 @@ class ForegroundLocationService extends TaskHandler {
   void onStart(DateTime timestamp, SendPort? sendPort) {
     print('Foreground task started at $timestamp');
     timer = Timer.periodic(
-        const Duration(seconds: 10), (Timer t) => _logTime(sendPort));
+        const Duration(seconds: 45), (Timer t) => _logTime(sendPort));
   }
 
   void _logTime(SendPort? sendPort) {
     final currentTime = DateTime.now();
-    print('Current time: $currentTime');
-    sendPort?.send('Current time: $currentTime');
+    print('Wake app at: $currentTime');
+    sendPort?.send('Wake app at: $currentTime');
   }
 
   @override
