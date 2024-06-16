@@ -1,5 +1,6 @@
 import 'package:avatar_glow/avatar_glow.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task_platform_interface.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -62,7 +63,7 @@ class MainPage extends StatefulWidget {
   _MainPageState createState() => _MainPageState();
 }
 
-class _MainPageState extends State<MainPage> {
+class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
   late ForegroundLocationService locationService;
   String geoLink = '';
   String emergencyMessage = 'Your emergency message here';
@@ -73,6 +74,7 @@ class _MainPageState extends State<MainPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initForegroundTask();
     _requestPermissions();
     locationService = ForegroundLocationService();
@@ -258,10 +260,21 @@ class _MainPageState extends State<MainPage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     locationService.endSession();
     Provider.of<PeakDetectionNotifier>(context, listen: false)
         .removeListener(_handlePatternDetection);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    print(state);
+    if (state == AppLifecycleState.detached) {
+      FlutterForegroundTaskPlatform.instance.stopService();
+      FlutterForegroundTask.stopService();
+      FlutterForegroundTask.clearAllData();
+    }
   }
 
   @override
