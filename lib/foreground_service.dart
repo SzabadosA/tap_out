@@ -125,7 +125,7 @@ class ForegroundLocationService extends TaskHandler {
 
   @override
   void onNotificationButtonPressed(String id) {
-    print('Notification button pressed: $id');
+    // No actions needed as buttons are removed
   }
 
   @override

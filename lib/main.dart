@@ -94,10 +94,7 @@ class _MainPageState extends State<MainPage> {
           resPrefix: ResourcePrefix.ic,
           name: 'launcher',
         ),
-        buttons: [
-          NotificationButton(id: 'pause', text: 'Pause'),
-          NotificationButton(id: 'stop', text: 'Stop'),
-        ],
+        // Remove buttons from the notification
       ),
       iosNotificationOptions: IOSNotificationOptions(
         showNotification: true,
@@ -105,7 +102,7 @@ class _MainPageState extends State<MainPage> {
       ),
       foregroundTaskOptions: ForegroundTaskOptions(
         interval: 10000,
-        autoRunOnBoot: true,
+        autoRunOnBoot: false,
         allowWakeLock: true,
         allowWifiLock: true,
       ),
