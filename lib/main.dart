@@ -74,15 +74,17 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance
+        .addObserver(this); // Add observer for app lifecycle changes
     _initForegroundTask();
-    _requestPermissions();
+    _requestPermissions(); // Request necessary permissions
     locationService = ForegroundLocationService();
-    _loadEmergencyMessage();
-    _loadContacts();
+    _loadEmergencyMessage(); // Load saved emergency message
+    _loadContacts(); // Load saved contacts
     _startForegroundTask();
   }
 
+  // Initialize the foreground task
   void _initForegroundTask() {
     FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
@@ -96,7 +98,6 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
           resPrefix: ResourcePrefix.ic,
           name: 'launcher',
         ),
-        // Remove buttons from the notification
       ),
       iosNotificationOptions: IOSNotificationOptions(
         showNotification: true,
@@ -111,6 +112,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     );
   }
 
+  // Start the foreground task
   Future<void> _startForegroundTask() async {
     await FlutterForegroundTask.startService(
       notificationTitle: 'Service is Running',
@@ -119,6 +121,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     );
   }
 
+  // Request necessary permissions
   Future<void> _requestPermissions() async {
     bool micGranted = await _requestMicPermission();
     if (micGranted) {
@@ -128,7 +131,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
         if (smsGranted) {
           setState(() {
             permissionsGranted = true;
-            _initializeListeners();
+            _initializeListeners(); // Initialize listeners if all permissions are granted
           });
         } else {
           _showPermissionDeniedDialog('SMS');
@@ -141,6 +144,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     }
   }
 
+  // Request microphone permission
   Future<bool> _requestMicPermission() async {
     if (await Permission.microphone.request().isGranted) {
       return true;
@@ -150,6 +154,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     }
   }
 
+  // Request geolocation permission
   Future<bool> _requestGeoPermission() async {
     LocationPermission permission = await Geolocator.requestPermission();
     if (permission == LocationPermission.whileInUse ||
@@ -161,6 +166,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     }
   }
 
+  // Request SMS permission
   Future<bool> _requestSmsPermission() async {
     if (await Permission.sms.request().isGranted) {
       print("SMS permission granted");
@@ -171,6 +177,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     }
   }
 
+  // Show a dialog if a permission is denied
   void _showPermissionDeniedDialog(String permission) {
     showDialog(
       context: context,
@@ -193,11 +200,13 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     );
   }
 
+  // Initialize pattern detection listeners
   void _initializeListeners() {
     Provider.of<PeakDetectionNotifier>(context, listen: false)
         .addListener(_handlePatternDetection);
   }
 
+  // Send SMS with emergency message
   void _sendSMS(String message, List<String> recipients) async {
     String result = await sendSMS(message: message, recipients: recipients)
         .catchError((onError) {
@@ -206,6 +215,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     print(result);
   }
 
+  // Load the emergency message from shared preferences
   Future<void> _loadEmergencyMessage() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -214,6 +224,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     });
   }
 
+  // Load the contacts from shared preferences
   Future<void> _loadContacts() async {
     final prefs = await SharedPreferences.getInstance();
     final contactData = prefs.getStringList('contacts') ?? [];
@@ -225,6 +236,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     });
   }
 
+  // Handle pattern detection events
   void _handlePatternDetection() async {
     final isPatternDetected =
         Provider.of<PeakDetectionNotifier>(context, listen: false)
@@ -243,10 +255,10 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
       List<String> recipients =
           contacts.map((contact) => contact.phoneNumber).toList();
 
-      //String result = await sendSMS(
-      //    message: message, recipients: recipients, sendDirect: true);
-      //print(result);
-      //print(recipients);
+      String result = await sendSMS(
+          message: message, recipients: recipients, sendDirect: true);
+      print(result);
+      print(recipients);
       print(message);
     } else if (!isPatternDetected && isSessionActive) {
       locationService.endSession();
@@ -260,7 +272,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
+    WidgetsBinding.instance.removeObserver(this); // Remove observer
     locationService.endSession();
     Provider.of<PeakDetectionNotifier>(context, listen: false)
         .removeListener(_handlePatternDetection);
@@ -271,6 +283,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     print(state);
     if (state == AppLifecycleState.detached) {
+      // Stop foreground service and clear data when app is detached
       FlutterForegroundTaskPlatform.instance.stopService();
       FlutterForegroundTask.stopService();
       FlutterForegroundTask.clearAllData();

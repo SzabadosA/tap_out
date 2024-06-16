@@ -39,7 +39,8 @@ class HelpPage extends StatelessWidget {
               'various permissions. These include access to your microphone, '
               'geolocation, and SMS. These permissions are crucial for the '
               'app to function correctly. Please ensure all requested '
-              'permissions are granted.',
+              'permissions are granted. If you encounter any problems, please '
+              'check manually that the app has all necessary permissions.',
               style: TextStyle(fontSize: 16),
             ),
             SizedBox(height: 20),

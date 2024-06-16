@@ -50,7 +50,7 @@ class MainActivity : FlutterActivity() {
     private fun acquireWakeLock() {
         if (wakeLock == null) {
             val powerManager: PowerManager = getSystemService(POWER_SERVICE) as PowerManager
-            wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyApp::WakeLock")
+            wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "TapOut::WakeLock")
             wakeLock?.acquire()
             Log.d("MainActivity", "Wake lock acquired")
         } else {
