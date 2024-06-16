@@ -9,15 +9,22 @@ import 'package:tap_out/foreground_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:geolocator_platform_interface/geolocator_platform_interface.dart';
+import 'mock_geolocator_platform.dart';
 import 'foreground_service_test.mocks.dart';
 
 @GenerateNiceMocks([MockSpec<http.Client>()])
 void main() {
   group('ForegroundLocationService', () {
     late ForegroundLocationService service;
+    late MockClient mockClient;
+    late MockGeolocatorPlatform mockGeolocatorPlatform;
 
     setUp(() {
       service = ForegroundLocationService();
+      mockClient = MockClient();
+      mockGeolocatorPlatform = MockGeolocatorPlatform();
+      GeolocatorPlatform.instance = mockGeolocatorPlatform;
     });
 
     test('generateUUID returns a valid UUID', () {
@@ -36,6 +43,38 @@ void main() {
       service.timer = Timer.periodic(Duration(seconds: 2), (_) {});
       service.onDestroy(DateTime.now(), null);
       expect(service.timer, isNull);
+    });
+
+    test('startSession starts session and initializes timer', () async {
+      when(mockClient.post(any,
+              headers: anyNamed('headers'), body: anyNamed('body')))
+          .thenAnswer((_) async => http.Response('{"status": "success"}', 200));
+
+      await service.startSession();
+      expect(service.timer, isNotNull);
+      expect(service.geoLink, contains(service.userId));
+    });
+
+    test('sendLocation does not send location if service is disabled',
+        () async {
+      when(mockGeolocatorPlatform.isLocationServiceEnabled())
+          .thenAnswer((_) async => false);
+
+      await service.sendLocation();
+      verifyNever(mockClient.post(any,
+          headers: anyNamed('headers'), body: anyNamed('body')));
+    });
+
+    test('sendLocation does not send location if permission is denied',
+        () async {
+      when(mockGeolocatorPlatform.isLocationServiceEnabled())
+          .thenAnswer((_) async => true);
+      when(mockGeolocatorPlatform.checkPermission())
+          .thenAnswer((_) async => LocationPermission.denied);
+
+      await service.sendLocation();
+      verifyNever(mockClient.post(any,
+          headers: anyNamed('headers'), body: anyNamed('body')));
     });
   });
 }

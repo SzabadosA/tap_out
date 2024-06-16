@@ -51,6 +51,7 @@ dependencies:
   avatar_glow: 2.0.2
   shared_preferences: ^2.0.6
   vibration: ^1.8.4
+  plugin_platform_interface: ^2.0.0
 
 dev_dependencies:
   flutter_test:
