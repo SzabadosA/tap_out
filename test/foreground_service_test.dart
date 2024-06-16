@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
@@ -15,6 +16,12 @@ import 'foreground_service_test.mocks.dart';
 
 @GenerateNiceMocks([MockSpec<http.Client>()])
 void main() {
+  TestWidgetsFlutterBinding
+      .ensureInitialized(); // Ensure bindings are initialized
+
+  const MethodChannel wakeLockChannel =
+      MethodChannel('com.example.app/wakelock');
+
   group('ForegroundLocationService', () {
     late ForegroundLocationService service;
     late MockClient mockClient;
@@ -25,6 +32,20 @@ void main() {
       mockClient = MockClient();
       mockGeolocatorPlatform = MockGeolocatorPlatform();
       GeolocatorPlatform.instance = mockGeolocatorPlatform;
+
+      // Mock MethodChannel for wake lock
+      wakeLockChannel.setMockMethodCallHandler((MethodCall methodCall) async {
+        if (methodCall.method == 'acquireWakeLock') {
+          return null; // Simulate successful wake lock acquisition
+        } else if (methodCall.method == 'releaseWakeLock') {
+          return null; // Simulate successful wake lock release
+        }
+        return null;
+      });
+    });
+
+    tearDown(() {
+      wakeLockChannel.setMockMethodCallHandler(null);
     });
 
     test('generateUUID returns a valid UUID', () {
@@ -51,7 +72,7 @@ void main() {
           .thenAnswer((_) async => http.Response('{"status": "success"}', 200));
 
       await service.startSession();
-      expect(service.timer, isNotNull);
+      expect(service.locationUpdateTimer, isNotNull);
       expect(service.geoLink, contains(service.userId));
     });
 
