@@ -15,6 +15,7 @@ class SettingsPage extends StatelessWidget {
         title: const Text('Settings'), // Title of the app bar
       ),
       body: ListView(
+        shrinkWrap: true,
         children: <Widget>[
           const SizedBox(height: 20), // Add spacing at the top of the list
           ListTile(

@@ -66,7 +66,7 @@ class _EmergencyMessageWidgetState extends State<EmergencyMessageWidget> {
             ),
             const SizedBox(height: 20),
             Text(
-              "Current Message: $_currentMessage", // Display the current saved message
+              "Current Message: \n\n $_currentMessage \n <Link to location>", // Display the current saved message
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ],

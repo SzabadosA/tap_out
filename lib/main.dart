@@ -1,5 +1,6 @@
 import 'package:avatar_glow/avatar_glow.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task_platform_interface.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -42,12 +43,12 @@ class TapOutApp extends StatelessWidget {
             fontSize: 72,
             fontWeight: FontWeight.bold,
           ),
-          titleLarge: GoogleFonts.oswald(
+          titleLarge: GoogleFonts.nunitoSans(
             fontSize: 30,
             fontStyle: FontStyle.italic,
           ),
-          bodyMedium: GoogleFonts.merriweather(),
-          displaySmall: GoogleFonts.pacifico(),
+          bodyMedium: GoogleFonts.lato(),
+          displaySmall: GoogleFonts.lato(),
         ),
       ),
       home: const MainPage(),
@@ -62,7 +63,7 @@ class MainPage extends StatefulWidget {
   _MainPageState createState() => _MainPageState();
 }
 
-class _MainPageState extends State<MainPage> {
+class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
   late ForegroundLocationService locationService;
   String geoLink = '';
   String emergencyMessage = 'Your emergency message here';
@@ -73,44 +74,48 @@ class _MainPageState extends State<MainPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initForegroundTask();
     _requestPermissions();
     locationService = ForegroundLocationService();
     _loadEmergencyMessage();
     _loadContacts();
+    _startForegroundTask();
   }
 
   void _initForegroundTask() {
     FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
-        foregroundServiceType: AndroidForegroundServiceType.DATA_SYNC,
-        channelId: 'foreground_service',
-        channelName: 'Foreground Service Notification',
-        channelDescription:
-            'This notification appears when the foreground service is running.',
+        channelId: 'foreground_service_channel',
+        channelName: 'Foreground Service',
+        channelDescription: 'This channel is used for important notifications.',
         channelImportance: NotificationChannelImportance.LOW,
         priority: NotificationPriority.LOW,
-        iconData: const NotificationIconData(
+        iconData: NotificationIconData(
           resType: ResourceType.mipmap,
           resPrefix: ResourcePrefix.ic,
           name: 'launcher',
         ),
-        buttons: [
-          const NotificationButton(id: 'sendButton', text: 'Send'),
-          const NotificationButton(id: 'testButton', text: 'Test'),
-        ],
+        // Remove buttons from the notification
       ),
-      iosNotificationOptions: const IOSNotificationOptions(
+      iosNotificationOptions: IOSNotificationOptions(
         showNotification: true,
         playSound: false,
       ),
-      foregroundTaskOptions: const ForegroundTaskOptions(
-        interval: 5000,
-        isOnceEvent: false,
-        autoRunOnBoot: true,
+      foregroundTaskOptions: ForegroundTaskOptions(
+        interval: 10000,
+        autoRunOnBoot: false,
         allowWakeLock: true,
         allowWifiLock: true,
       ),
+    );
+  }
+
+  Future<void> _startForegroundTask() async {
+    await FlutterForegroundTask.startService(
+      notificationTitle: 'Service is Running',
+      notificationText: 'Tap to return to the app',
+      callback: startCallback,
     );
   }
 
@@ -227,6 +232,7 @@ class _MainPageState extends State<MainPage> {
 
     if (isPatternDetected && !isSessionActive) {
       await locationService.startSession();
+      locationService.startLocationUpdates();
       await _loadContacts();
       await _loadEmergencyMessage();
       setState(() {
@@ -237,42 +243,38 @@ class _MainPageState extends State<MainPage> {
       List<String> recipients =
           contacts.map((contact) => contact.phoneNumber).toList();
 
-      String result = await sendSMS(
-          message: message, recipients: recipients, sendDirect: true);
-      print(result);
-      print(recipients);
+      //String result = await sendSMS(
+      //    message: message, recipients: recipients, sendDirect: true);
+      //print(result);
+      //print(recipients);
       print(message);
-
-      _startForegroundTask();
     } else if (!isPatternDetected && isSessionActive) {
       locationService.endSession();
+      locationService.stopLocationUpdates();
       setState(() {
         isSessionActive = false;
       });
       print('Session ended');
-
-      _stopForegroundTask();
     }
-  }
-
-  Future<void> _startForegroundTask() async {
-    await FlutterForegroundTask.startService(
-      notificationTitle: 'Foreground Service is running',
-      notificationText: 'Tap to return to the app',
-      callback: startCallback,
-    );
-  }
-
-  Future<void> _stopForegroundTask() async {
-    await FlutterForegroundTask.stopService();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     locationService.endSession();
     Provider.of<PeakDetectionNotifier>(context, listen: false)
         .removeListener(_handlePatternDetection);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    print(state);
+    if (state == AppLifecycleState.detached) {
+      FlutterForegroundTaskPlatform.instance.stopService();
+      FlutterForegroundTask.stopService();
+      FlutterForegroundTask.clearAllData();
+    }
   }
 
   @override
