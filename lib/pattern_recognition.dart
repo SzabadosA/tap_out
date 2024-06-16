@@ -115,6 +115,7 @@ class _MicPageState extends State<MicPage> {
     if (volume > threshold) {
       if (peakTimes.isEmpty || now - peakTimes.last > 400) {
         peakTimes.add(now);
+        print("Peak detected!");
         if (peakTimes.length > 4) {
           peakTimes.removeAt(0); // Keep the peak times list to a maximum of 4
         }
