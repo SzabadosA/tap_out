@@ -5,10 +5,12 @@ TapOut SOS is a mobile application designed to help users quickly send an emerge
 location to pre-defined contacts by detecting specific patterns of microphone input (taps). This app operates both 
 in the foreground and background, ensuring continuous monitoring and quick response in case of emergencies.
 
+Tap_out_server: https://github.com/SzabadosA/tap_out_server
+
 ### Features
 - **Pattern Detection**: Uses microphone input to detect a specific pattern (four taps) to trigger an emergency alert.
 - **Emergency Messaging**: Automatically sends an emergency message with the user's location to predefined contacts.
-- **Background Service**: Runs as a foreground service to ensure continuous monitoring even when the app is not active.
+- **Foreground Service**: Runs as a foreground service to ensure continuous monitoring even when the app is not active.
 - **Location Tracking**: Sends the user's real-time location to the server, which can be tracked through a web interface.
 - **Permission Handling**: Requests necessary permissions for microphone, geolocation, and SMS.
 - **Settings**: Allows users to customize emergency message and manage contacts.
@@ -16,7 +18,6 @@ in the foreground and background, ensuring continuous monitoring and quick respo
 ### Prerequisites
 - Flutter SDK
 - Dart
-- Node.js
 
 ### Setup and Installation
 
@@ -45,7 +46,16 @@ lib/
 ├── main.dart
 ├── pattern_recognition.dart
 ├── settings_page.dart
-
+assets/
+├── huawei.jpg
+test/
+├── contacts_page_test.dart
+├── emergency_message_widget_test.dart
+├── foreground_service_test.dart
+├── foreground_service_test.mocks.dart
+├── mock_geolocator_platform.dart
+├── peakDetectionNotifier_test.dart
+├── settings_page_test.dart
 ```
 
 
@@ -60,9 +70,6 @@ Manages the user's emergency contacts. Allows adding, removing, and saving conta
 #### `custom_button.dart`
 Defines a styled button widget used throughout the app.
 
-#### `custom_scaffold.dart`
-Defines a custom scaffold widget with a gradient background.
-
 #### `emergency_message.dart`
 Allows users to set and save a custom emergency message.
 
@@ -76,13 +83,7 @@ A placeholder for the help page, where users can find more information about usi
 Handles microphone input to detect the specific pattern (four taps) that triggers the emergency alert.
 
 #### `settings_page.dart`
-Allows users to access and modify settings, such as contacts and emergency message.
-
-#### `server/index.html`
-The web interface for tracking the user's location in real-time.
-
-#### `server/server.js`
-The server-side code that handles incoming location data, manages WebSocket connections, and serves the web interface.
+Settings page for deactivation, contact and message editing.
 
 ### How It Works
 
@@ -95,7 +96,7 @@ The server-side code that handles incoming location data, manages WebSocket conn
     - Sends an SMS with a predefined message and the user's current location to all predefined contacts.
 
 3. **Location Tracking**:
-    - Continuously sends location updates to the server.
+    - Continuously sends location updates to the server, when active.
     - The location can be tracked via a web interface.
 
 4. **Foreground Service**:
