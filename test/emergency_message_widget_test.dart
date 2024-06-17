@@ -49,7 +49,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-          find.text('Current Message: New emergency message'), findsOneWidget);
+        find.text(
+            'Current Message: \n\n New emergency message \n <Link to location>'),
+        findsOneWidget,
+      );
 
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getString('emergency_message'), 'New emergency message');

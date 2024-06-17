@@ -1,5 +1,6 @@
 import 'package:avatar_glow/avatar_glow.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task_platform_interface.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -42,12 +43,12 @@ class TapOutApp extends StatelessWidget {
             fontSize: 72,
             fontWeight: FontWeight.bold,
           ),
-          titleLarge: GoogleFonts.oswald(
+          titleLarge: GoogleFonts.nunitoSans(
             fontSize: 30,
             fontStyle: FontStyle.italic,
           ),
-          bodyMedium: GoogleFonts.merriweather(),
-          displaySmall: GoogleFonts.pacifico(),
+          bodyMedium: GoogleFonts.lato(),
+          displaySmall: GoogleFonts.lato(),
         ),
       ),
       home: const MainPage(),
@@ -62,7 +63,7 @@ class MainPage extends StatefulWidget {
   _MainPageState createState() => _MainPageState();
 }
 
-class _MainPageState extends State<MainPage> {
+class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
   late ForegroundLocationService locationService;
   String geoLink = '';
   String emergencyMessage = 'Your emergency message here';
@@ -73,47 +74,54 @@ class _MainPageState extends State<MainPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance
+        .addObserver(this); // Add observer for app lifecycle changes
     _initForegroundTask();
-    _requestPermissions();
+    _requestPermissions(); // Request necessary permissions
     locationService = ForegroundLocationService();
-    _loadEmergencyMessage();
-    _loadContacts();
+    _loadEmergencyMessage(); // Load saved emergency message
+    _loadContacts(); // Load saved contacts
+    _startForegroundTask();
   }
 
+  // Initialize the foreground task
   void _initForegroundTask() {
     FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
-        foregroundServiceType: AndroidForegroundServiceType.DATA_SYNC,
-        channelId: 'foreground_service',
-        channelName: 'Foreground Service Notification',
-        channelDescription:
-            'This notification appears when the foreground service is running.',
+        channelId: 'foreground_service_channel',
+        channelName: 'Foreground Service',
+        channelDescription: 'This channel is used for important notifications.',
         channelImportance: NotificationChannelImportance.LOW,
         priority: NotificationPriority.LOW,
-        iconData: const NotificationIconData(
+        iconData: NotificationIconData(
           resType: ResourceType.mipmap,
           resPrefix: ResourcePrefix.ic,
           name: 'launcher',
         ),
-        buttons: [
-          const NotificationButton(id: 'sendButton', text: 'Send'),
-          const NotificationButton(id: 'testButton', text: 'Test'),
-        ],
       ),
-      iosNotificationOptions: const IOSNotificationOptions(
+      iosNotificationOptions: IOSNotificationOptions(
         showNotification: true,
         playSound: false,
       ),
-      foregroundTaskOptions: const ForegroundTaskOptions(
-        interval: 5000,
-        isOnceEvent: false,
-        autoRunOnBoot: true,
+      foregroundTaskOptions: ForegroundTaskOptions(
+        interval: 10000,
+        autoRunOnBoot: false,
         allowWakeLock: true,
         allowWifiLock: true,
       ),
     );
   }
 
+  // Start the foreground task
+  Future<void> _startForegroundTask() async {
+    await FlutterForegroundTask.startService(
+      notificationTitle: 'Service is Running',
+      notificationText: 'Tap to return to the app',
+      callback: startCallback,
+    );
+  }
+
+  // Request necessary permissions
   Future<void> _requestPermissions() async {
     bool micGranted = await _requestMicPermission();
     if (micGranted) {
@@ -123,7 +131,7 @@ class _MainPageState extends State<MainPage> {
         if (smsGranted) {
           setState(() {
             permissionsGranted = true;
-            _initializeListeners();
+            _initializeListeners(); // Initialize listeners if all permissions are granted
           });
         } else {
           _showPermissionDeniedDialog('SMS');
@@ -136,6 +144,7 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
+  // Request microphone permission
   Future<bool> _requestMicPermission() async {
     if (await Permission.microphone.request().isGranted) {
       return true;
@@ -145,6 +154,7 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
+  // Request geolocation permission
   Future<bool> _requestGeoPermission() async {
     LocationPermission permission = await Geolocator.requestPermission();
     if (permission == LocationPermission.whileInUse ||
@@ -156,6 +166,7 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
+  // Request SMS permission
   Future<bool> _requestSmsPermission() async {
     if (await Permission.sms.request().isGranted) {
       print("SMS permission granted");
@@ -166,6 +177,7 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
+  // Show a dialog if a permission is denied
   void _showPermissionDeniedDialog(String permission) {
     showDialog(
       context: context,
@@ -188,11 +200,13 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
+  // Initialize pattern detection listeners
   void _initializeListeners() {
     Provider.of<PeakDetectionNotifier>(context, listen: false)
         .addListener(_handlePatternDetection);
   }
 
+  // Send SMS with emergency message
   void _sendSMS(String message, List<String> recipients) async {
     String result = await sendSMS(message: message, recipients: recipients)
         .catchError((onError) {
@@ -201,6 +215,7 @@ class _MainPageState extends State<MainPage> {
     print(result);
   }
 
+  // Load the emergency message from shared preferences
   Future<void> _loadEmergencyMessage() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -209,6 +224,7 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
+  // Load the contacts from shared preferences
   Future<void> _loadContacts() async {
     final prefs = await SharedPreferences.getInstance();
     final contactData = prefs.getStringList('contacts') ?? [];
@@ -220,6 +236,7 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
+  // Handle pattern detection events
   void _handlePatternDetection() async {
     final isPatternDetected =
         Provider.of<PeakDetectionNotifier>(context, listen: false)
@@ -227,6 +244,7 @@ class _MainPageState extends State<MainPage> {
 
     if (isPatternDetected && !isSessionActive) {
       await locationService.startSession();
+      locationService.startLocationUpdates();
       await _loadContacts();
       await _loadEmergencyMessage();
       setState(() {
@@ -242,37 +260,34 @@ class _MainPageState extends State<MainPage> {
       print(result);
       print(recipients);
       print(message);
-
-      _startForegroundTask();
     } else if (!isPatternDetected && isSessionActive) {
       locationService.endSession();
+      locationService.stopLocationUpdates();
       setState(() {
         isSessionActive = false;
       });
       print('Session ended');
-
-      _stopForegroundTask();
     }
-  }
-
-  Future<void> _startForegroundTask() async {
-    await FlutterForegroundTask.startService(
-      notificationTitle: 'Foreground Service is running',
-      notificationText: 'Tap to return to the app',
-      callback: startCallback,
-    );
-  }
-
-  Future<void> _stopForegroundTask() async {
-    await FlutterForegroundTask.stopService();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this); // Remove observer
     locationService.endSession();
     Provider.of<PeakDetectionNotifier>(context, listen: false)
         .removeListener(_handlePatternDetection);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    print(state);
+    if (state == AppLifecycleState.detached) {
+      // Stop foreground service and clear data when app is detached
+      FlutterForegroundTaskPlatform.instance.stopService();
+      FlutterForegroundTask.stopService();
+      FlutterForegroundTask.clearAllData();
+    }
   }
 
   @override
