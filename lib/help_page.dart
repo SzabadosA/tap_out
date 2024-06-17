@@ -12,13 +12,13 @@ class HelpPage extends StatelessWidget {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListView(
-          children: const <Widget>[
-            Text(
+          children: <Widget>[
+            const Text(
               'Welcome to TapOut SOS',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 20),
-            Text(
+            const SizedBox(height: 20),
+            const Text(
               'TapOut SOS is a safety application designed to help you in '
               'emergency situations by sending your real-time location to '
               'your emergency contacts by tapping your phone 4 times. Here, we will '
@@ -27,14 +27,30 @@ class HelpPage extends StatelessWidget {
               'the app\'s service and warranty.',
               style: TextStyle(fontSize: 16),
             ),
-            SizedBox(height: 20),
-            Text(
-              'How to Use the App',
+            const SizedBox(height: 20),
+            const Text(
+              'How to set up the App',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 10),
-            Text(
-              '\nGrant Permissions:\nWhen '
+            const SizedBox(height: 10),
+            const Text(
+              'Disable Automatic Battery Management:\n'
+              'To ensure the app functions correctly in the background, please disable any battery management settings that might interfere with its operation. This is especially important for devices from manufacturers like Huawei, Xiaomi, and OnePlus. Follow your device-specific instructions to disable battery optimization for TapOut SOS.',
+              style: TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 10),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                return Image(
+                  image: const AssetImage('assets/huawei.jpg'),
+                  width: constraints.maxWidth *
+                      0.6, // Set the width to 80% of the screen width
+                );
+              },
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Grant Permissions:\nWhen '
               'you first open the app, you will be prompted to grant '
               'various permissions. These include access to your microphone, '
               'geolocation, and SMS. These permissions are crucial for the '
@@ -43,13 +59,13 @@ class HelpPage extends StatelessWidget {
               'check manually that the app has all necessary permissions.',
               style: TextStyle(fontSize: 16),
             ),
-            SizedBox(height: 20),
-            Text(
+            const SizedBox(height: 20),
+            const Text(
               'Main Features',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 20),
-            Text(
+            const SizedBox(height: 20),
+            const Text(
               'Sending Emergency Alerts\n\nAutomatic Detection:\nWhen the app '
               'detects a pattern of 4 taps, '
               'it will automatically send an SMS with your current location '
@@ -62,24 +78,24 @@ class HelpPage extends StatelessWidget {
               '"Deactivate" button in the settings page to turn off the SOS mode.',
               style: TextStyle(fontSize: 16),
             ),
-            SizedBox(height: 20),
-            Text(
+            const SizedBox(height: 20),
+            const Text(
               'Managing Emergency Contacts\n\nAdd/Edit Contacts:\nGo to the '
               'settings page and select "Edit Contacts". Here, you can add, '
               'edit, or remove emergency contacts. Ensure that your contacts '
               'are correctly saved as they will be notified during an emergency.',
               style: TextStyle(fontSize: 16),
             ),
-            SizedBox(height: 20),
-            Text(
+            const SizedBox(height: 20),
+            const Text(
               'Customizing Emergency Message\n\nSet Emergency Message:\nIn the '
               'settings page, tap on "Edit Message". Enter your personalized '
               'emergency message. This message will be sent along with your '
               'location to your emergency contacts during an alert.',
               style: TextStyle(fontSize: 16),
             ),
-            SizedBox(height: 20),
-            Text(
+            const SizedBox(height: 20),
+            const Text(
               'Important Information\n\nPermissions Required\n\nMicrophone:\n'
               'Needed to detect specific voice patterns that trigger the '
               'emergency alert.\n\nLocation:\nRequired to send your real-time '
@@ -91,8 +107,8 @@ class HelpPage extends StatelessWidget {
               'indicating that the app is running in the background.',
               style: TextStyle(fontSize: 16),
             ),
-            SizedBox(height: 20),
-            Text(
+            const SizedBox(height: 20),
+            const Text(
               'Exclusion of Guarantee and Warranty\n\nNo Guarantee of Service:\n'
               'TapOut SOS is provided as-is, without any guarantees of '
               'performance. While we strive to provide accurate and reliable '
@@ -110,8 +126,8 @@ class HelpPage extends StatelessWidget {
               'after installation to ensure it is working as expected.',
               style: TextStyle(fontSize: 16),
             ),
-            SizedBox(height: 20),
-            Text(
+            const SizedBox(height: 20),
+            const Text(
               '\n\nThank you for using TapOut SOS and stay safe!',
               style: TextStyle(fontSize: 16),
             ),
